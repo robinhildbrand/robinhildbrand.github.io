@@ -31,15 +31,18 @@ def draw_graph(graph: nx.Graph, title: str, output_file: Path, directed: bool) -
     plt.figure(figsize=(8, 6))
     nx.draw_networkx_nodes(graph, pos, node_color="#93c5fd", node_size=900)
     nx.draw_networkx_labels(graph, pos)
-    nx.draw_networkx_edges(
-        graph,
-        pos,
-        arrows=directed,
-        arrowstyle="-|>" if directed else "-",
-        arrowsize=18 if directed else 0,
-        width=1.8,
-        connectionstyle="arc3,rad=0.08",
-    )
+    if directed:
+        nx.draw_networkx_edges(
+            graph,
+            pos,
+            arrows=True,
+            arrowstyle="-|>",
+            arrowsize=18,
+            width=1.8,
+            connectionstyle="arc3,rad=0.08",
+        )
+    else:
+        nx.draw_networkx_edges(graph, pos, width=1.8)
     nx.draw_networkx_edge_labels(
         graph,
         pos,
