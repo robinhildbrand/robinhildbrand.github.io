@@ -1,0 +1,50 @@
+---
+layout: page
+title: "Research Articles & Notes"
+subtitle: "Peer-reviewed essays, algorithmic deep dives, and computational notes with interactive mathematical visualizations."
+---
+
+<div class="articles-index-container">
+  <div class="posts-list">
+    {% for post in site.posts %}
+      <article class="post-entry-card">
+        <div class="post-entry-meta">
+          <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%B %-d, %Y" }}</time>
+          <span class="meta-separator">•</span>
+          <span class="reading-time">
+            {% assign words = post.content | number_of_words %}
+            {% assign read_time = words | divided_by: 180 | at_least: 1 %}
+            {{ read_time }} min read (~{{ words }} words)
+          </span>
+          {% if post.tags %}
+            <div class="post-tags-list">
+              {% for tag in post.tags %}
+                <span class="tag-badge">#{{ tag }}</span>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+        
+        <h2 class="post-entry-title">
+          <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+        </h2>
+
+        {% if post.subtitle %}
+          <p class="post-entry-subtitle" style="font-style: italic; color: var(--text-secondary); margin-bottom: 0.8rem;">
+            {{ post.subtitle }}
+          </p>
+        {% endif %}
+
+        {% if post.abstract %}
+          <p class="post-entry-abstract">{{ post.abstract | strip_html | truncatewords: 40 }}</p>
+        {% elsif post.excerpt %}
+          <p class="post-entry-abstract">{{ post.excerpt | strip_html | truncatewords: 40 }}</p>
+        {% endif %}
+
+        <div class="post-entry-footer">
+          <a href="{{ post.url | relative_url }}" class="read-more-link">Read full article <span class="arrow">→</span></a>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+</div>

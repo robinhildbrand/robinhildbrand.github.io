@@ -1,0 +1,53 @@
+---
+layout: page
+title: "About & Academic Curriculum"
+subtitle: "Robin Hildbrand • Computational Science & Applied Mathematics • EPFL"
+---
+
+<div class="about-academic-container" style="max-width: 820px; margin: 0 auto;">
+  <div class="about-intro-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 2.5rem; align-items: start; margin-bottom: 2.5rem;">
+    <div>
+      <p style="font-size: 1.15rem; line-height: 1.7;">
+        I am a researcher and student at <strong>École Polytechnique Fédérale de Lausanne (EPFL)</strong> in Switzerland. 
+        My research focuses on <strong>spectral graph theory</strong>, <strong>dynamical systems on complex networks</strong>, 
+        and <strong>geometric deep learning</strong>.
+      </p>
+      <p>
+        This blog serves as an open academic repository of mathematical expositions, research notes, and interactive visualizations 
+        for studying networks, PDEs on graphs, and spectral graph algorithms.
+      </p>
+      <div style="margin-top: 1.2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+        <a href="mailto:{{ site.author.email }}" class="btn btn-primary">Contact via Email</a>
+        <a href="https://github.com/{{ site.author.github }}" target="_blank" rel="noopener" class="btn btn-secondary">GitHub Profile</a>
+      </div>
+    </div>
+    <div style="text-align: center;">
+      <img src="{{ site.author.avatar | relative_url }}" alt="{{ site.author.name }}" style="width: 150px; height: 150px; border-radius: 50%; border: 3px solid var(--border-light); box-shadow: var(--shadow-md);">
+    </div>
+  </div>
+
+  <hr>
+
+  <h2>Research Interests</h2>
+  <ul>
+    <li><strong>Spectral Graph Theory:</strong> Eigenvalue distributions of graph Laplacians, algebraic connectivity, nodal domains, and Cheeger's inequality.</li>
+    <li><strong>Continuous & Discrete Dynamical Systems:</strong> Heat equation and wave equation on graphs, consensus dynamics, Kuramoto synchronization, and random walks.</li>
+    <li><strong>Graph Neural Networks (GNNs):</strong> Spectral convolutions, over-smoothing and over-squashing analysis, curvature-based rewiring (Ricci curvature).</li>
+    <li><strong>Scientific Computing & Numerical Optimization:</strong> Sparse matrix solvers, Krylov subspace methods, and scalable graph partitioning algorithms.</li>
+  </ul>
+
+  <h2>Education & Affiliations</h2>
+  <div class="timeline" style="display: flex; flex-direction: column; gap: 1.5rem; margin: 1.5rem 0;">
+    <div class="timeline-item" style="border-left: 3px solid var(--color-accent); padding-left: 1.2rem;">
+      <h4 style="margin: 0; font-size: 1.1rem;">École Polytechnique Fédérale de Lausanne (EPFL)</h4>
+      <p style="margin: 0.2rem 0; font-family: var(--font-sans); font-size: 0.88rem; color: var(--text-muted);">Lausanne, Switzerland</p>
+      <p style="margin-top: 0.4rem; color: var(--text-secondary);">Computational Science, Mathematical Modeling & Machine Learning</p>
+    </div>
+  </div>
+
+  <h2>Selected Topics & Notes</h2>
+  <ul>
+    <li><a href="{{ '/posts/2026-09-02-spectral-graph-theory-and-diffusion/' | relative_url }}">Spectral Graph Theory: Graph Laplacians, Heat Diffusion & Community Detection</a></li>
+    <li><a href="{{ '/graph-guide/' | relative_url }}">Interactive Graph Plotting Cheat Sheet & Syntax Guide</a></li>
+  </ul>
+</div>

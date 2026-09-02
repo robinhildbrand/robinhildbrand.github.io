@@ -1,0 +1,133 @@
+---
+layout: default
+---
+<div class="home-layout-container">
+  <!-- Academic Hero Section -->
+  <section class="hero-section">
+    <div class="hero-grid">
+      <div class="hero-content">
+        <div class="affiliation-tag">EPFL • School of Computer & Communication Sciences / Basic Sciences</div>
+        <h1 class="hero-title">Mathematical Notes, Graph Theory & Network Dynamics</h1>
+        <p class="hero-subtitle">
+          An open academic space exploring the intersection of <strong>spectral graph theory</strong>, 
+          <strong>dynamical systems on complex networks</strong>, and <strong>graph machine learning</strong>.
+        </p>
+        <div class="hero-cta">
+          <a href="{{ '/blog/' | relative_url }}" class="btn btn-primary">Browse Research Articles</a>
+          <a href="{{ '/graph-guide/' | relative_url }}" class="btn btn-secondary">Interactive Graph Guide</a>
+        </div>
+      </div>
+      <div class="hero-aside">
+        {% include author-card.html %}
+      </div>
+    </div>
+  </section>
+
+  <!-- Research Themes Grid -->
+  <section class="research-pillars">
+    <h2 class="section-title"><span>Research Topics</span></h2>
+    <div class="pillars-grid">
+      <div class="pillar-card">
+        <div class="pillar-icon">🕸️</div>
+        <h3>Spectral Graph Theory</h3>
+        <p>Graph Laplacians, algebraic connectivity, Fiedler vectors, Cheeger bounds, and continuous spectrum analysis on infinite and random graphs.</p>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-icon">⚡</div>
+        <h3>Dynamical Systems on Networks</h3>
+        <p>Heat diffusion, consensus protocols, epidemic spreading (SIS/SIR models), synchronization of Kuramoto oscillators, and random walks.</p>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-icon">🧠</div>
+        <h3>Geometric Deep Learning</h3>
+        <p>Message passing graph neural networks (MPNNs), spectral convolutions, over-smoothing phenomena, and Ricci curvature on graphs.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Demo Spotlight -->
+  <section class="interactive-spotlight">
+    <div class="spotlight-header">
+      <span class="badge-interactive">Live Interactive Visualization</span>
+      <h2>Interactive Graph Sandbox</h2>
+      <p>Explore an interactive network graph below. Drag nodes, zoom in/out, or inspect community structures dynamically.</p>
+    </div>
+    
+    <div class="network-container-wrapper">
+      <div class="network-graph-block" data-physics="true" data-height="420px">
+```network
+{
+  "title": "Stochastic Block Model Network (2 Interconnected Communities)",
+  "height": "400px",
+  "physics": true,
+  "nodes": [
+    {"id": 1, "label": "Core A1", "group": "Cluster 1", "size": 26, "title": "Community 1 Hub (Deg: 5)"},
+    {"id": 2, "label": "A2", "group": "Cluster 1", "size": 18},
+    {"id": 3, "label": "A3", "group": "Cluster 1", "size": 18},
+    {"id": 4, "label": "A4", "group": "Cluster 1", "size": 18},
+    {"id": 5, "label": "Bridge α", "group": "Bridge", "size": 22, "shape": "diamond", "title": "Fiedler Cut Bottleneck Node"},
+    {"id": 6, "label": "Bridge β", "group": "Bridge", "size": 22, "shape": "diamond", "title": "Fiedler Cut Bottleneck Node"},
+    {"id": 7, "label": "Core B1", "group": "Cluster 2", "size": 26, "title": "Community 2 Hub (Deg: 5)"},
+    {"id": 8, "label": "B2", "group": "Cluster 2", "size": 18},
+    {"id": 9, "label": "B3", "group": "Cluster 2", "size": 18},
+    {"id": 10, "label": "B4", "group": "Cluster 2", "size": 18}
+  ],
+  "edges": [
+    {"from": 1, "to": 2, "width": 2.5},
+    {"from": 1, "to": 3, "width": 2.5},
+    {"from": 1, "to": 4, "width": 2.5},
+    {"from": 2, "to": 3, "width": 2},
+    {"from": 3, "to": 4, "width": 2},
+    {"from": 1, "to": 5, "width": 3, "color": {"color": "#f59e0b"}},
+    {"from": 5, "to": 6, "width": 3.5, "color": {"color": "#ef4444"}, "dashes": [5, 5], "title": "Critical Bottleneck Edge"},
+    {"from": 6, "to": 7, "width": 3, "color": {"color": "#f59e0b"}},
+    {"from": 7, "to": 8, "width": 2.5},
+    {"from": 7, "to": 9, "width": 2.5},
+    {"from": 7, "to": 10, "width": 2.5},
+    {"from": 8, "to": 9, "width": 2},
+    {"from": 9, "to": 10, "width": 2}
+  ]
+}
+```
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Articles Section -->
+  <section class="recent-posts-section">
+    <div class="section-header-row">
+      <h2 class="section-title"><span>Recent Articles & Notes</span></h2>
+      <a href="{{ '/blog/' | relative_url }}" class="view-all-link">View all articles →</a>
+    </div>
+
+    <div class="posts-list">
+      {% for post in site.posts limit: 5 %}
+        <article class="post-entry-card">
+          <div class="post-entry-meta">
+            <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%B %-d, %Y" }}</time>
+            <span class="meta-separator">•</span>
+            <span class="reading-time">{% assign words = post.content | number_of_words %}{% assign read_time = words | divided_by: 180 | at_least: 1 %}{{ read_time }} min read</span>
+            {% if post.tags %}
+              <div class="post-tags-list">
+                {% for tag in post.tags %}
+                  <span class="tag-badge">#{{ tag }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <h3 class="post-entry-title">
+            <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+          </h3>
+          {% if post.abstract %}
+            <p class="post-entry-abstract">{{ post.abstract | strip_html | truncatewords: 35 }}</p>
+          {% elsif post.excerpt %}
+            <p class="post-entry-abstract">{{ post.excerpt | strip_html | truncatewords: 35 }}</p>
+          {% endif %}
+          <div class="post-entry-footer">
+            <a href="{{ post.url | relative_url }}" class="read-more-link">Read full article <span class="arrow">→</span></a>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+</div>

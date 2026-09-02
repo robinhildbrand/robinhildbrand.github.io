@@ -1,0 +1,40 @@
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  if (typeof renderMathInElement !== "undefined") {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: "6635", right: "6635", display: true},
+        {left: "$", right: "$", display: false},
+        {left: "\(", right: "\)", display: false},
+        {left: "\[", right: "\]", display: true},
+        {left: "\begin{equation}", right: "\end{equation}", display: true},
+        {left: "\begin{equation*}", right: "\end{equation*}", display: true},
+        {left: "\begin{align}", right: "\end{align}", display: true},
+        {left: "\begin{align*}", right: "\end{align*}", display: true},
+        {left: "\begin{matrix}", right: "\end{matrix}", display: true},
+        {left: "\begin{pmatrix}", right: "\end{pmatrix}", display: true},
+        {left: "\begin{bmatrix}", right: "\end{bmatrix}", display: true}
+      ],
+      macros: {
+        "\R": "\mathbb{R}",
+        "\N": "\mathbb{N}",
+        "\Z": "\mathbb{Z}",
+        "\C": "\mathbb{C}",
+        "\E": "\mathbb{E}",
+        "\P": "\mathbb{P}",
+        "\Tr": "\operatorname{Tr}",
+        "\diag": "\operatorname{diag}",
+        "\argmin": "\operatorname*{arg\,min}",
+        "\argmax": "\operatorname*{arg\,max}",
+        "\deg": "\operatorname{deg}",
+        "\vol": "\operatorname{vol}",
+        "\cut": "\operatorname{cut}",
+        "\Laplacian": "\mathcal{L}",
+        "\Graph": "\mathcal{G}"
+      },
+      throwOnError: false,
+      ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "annotation", "annotation-xml"]
+    });
+  }
+});
+</script>

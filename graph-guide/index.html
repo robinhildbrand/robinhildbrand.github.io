@@ -1,0 +1,190 @@
+---
+layout: page
+title: "Interactive Graph & Math Plotting Guide"
+subtitle: "A comprehensive reference and cheat sheet for embedding network graphs, 2D/3D math plots, and LaTeX equations in Markdown."
+---
+
+<div class="guide-container" style="max-width: 860px; margin: 0 auto;">
+  <p class="lead" style="font-size: 1.15rem; line-height: 1.7;">
+    This website comes with a <strong>zero-configuration declarative plotting engine</strong>. 
+    You can easily embed interactive physics-based network graphs, mathematical curves, 3D surface plots, and LaTeX equations directly inside any Markdown blog post using standard code blocks.
+  </p>
+
+  <div class="callout callout-info">
+    <strong>⚡ How it works:</strong> Whenever you write standard Markdown fenced code blocks with language identifiers like <code>```network</code>, <code>```function-plot</code>, <code>```plotly</code>, or <code>```mermaid</code>, the client-side engine automatically renders them into responsive, interactive figures with zoom, pan, physics freeze, and PNG export controls.
+  </div>
+
+  <h2>1. Interactive Network Graphs</h2>
+  <p>To plot a network graph with customizable nodes, edges, labels, colors, and physics simulation, use <code>```network</code>:</p>
+
+  <div class="graph-demo-preview">
+```network
+{
+  "title": "Complete Graph K5 with Custom Grouping",
+  "height": "340px",
+  "physics": true,
+  "nodes": [
+    {"id": 1, "label": "v1 (Hub)", "group": "core", "size": 26},
+    {"id": 2, "label": "v2", "group": "peripheral", "size": 18},
+    {"id": 3, "label": "v3", "group": "peripheral", "size": 18},
+    {"id": 4, "label": "v4", "group": "peripheral", "size": 18},
+    {"id": 5, "label": "v5", "group": "peripheral", "size": 18}
+  ],
+  "edges": [
+    {"from": 1, "to": 2, "width": 2},
+    {"from": 1, "to": 3, "width": 2},
+    {"from": 1, "to": 4, "width": 2},
+    {"from": 1, "to": 5, "width": 2},
+    {"from": 2, "to": 3, "width": 1.5},
+    {"from": 3, "to": 4, "width": 1.5},
+    {"from": 4, "to": 5, "width": 1.5},
+    {"from": 5, "to": 2, "width": 1.5}
+  ]
+}
+```
+  </div>
+
+  <h3>Markdown Source Code:</h3>
+  <pre><code class="language-markdown">```network
+{
+  "title": "Complete Graph K5 with Custom Grouping",
+  "height": "340px",
+  "physics": true,
+  "nodes": [
+    {"id": 1, "label": "v1 (Hub)", "group": "core", "size": 26},
+    {"id": 2, "label": "v2", "group": "peripheral", "size": 18},
+    {"id": 3, "label": "v3", "group": "peripheral", "size": 18},
+    {"id": 4, "label": "v4", "group": "peripheral", "size": 18},
+    {"id": 5, "label": "v5", "group": "peripheral", "size": 18}
+  ],
+  "edges": [
+    {"from": 1, "to": 2, "width": 2},
+    {"from": 1, "to": 3, "width": 2},
+    {"from": 1, "to": 4, "width": 2},
+    {"from": 1, "to": 5, "width": 2},
+    {"from": 2, "to": 3, "width": 1.5},
+    {"from": 3, "to": 4, "width": 1.5},
+    {"from": 4, "to": 5, "width": 1.5},
+    {"from": 5, "to": 2, "width": 1.5}
+  ]
+}
+```</code></pre>
+
+  <hr>
+
+  <h2>2. 2D Mathematical Function Plots</h2>
+  <p>Plot mathematical functions, derivatives, tangents, and trigonometric curves using <code>```function-plot</code>:</p>
+
+```function-plot
+{
+  "title": "Damped Oscillation: f(x) = e^{-0.25x} \sin(3x)",
+  "height": "340px",
+  "xDomain": [-1, 10],
+  "yDomain": [-1.2, 1.2],
+  "grid": true,
+  "data": [
+    {
+      "fn": "exp(-0.25*x) * sin(3*x)",
+      "color": "#2563eb",
+      "derivative": {
+        "fn": "-0.25*exp(-0.25*x)*sin(3*x) + 3*exp(-0.25*x)*cos(3*x)",
+        "updateOnMouseMove": true
+      }
+    },
+    {
+      "fn": "exp(-0.25*x)",
+      "color": "#94a3b8"
+    },
+    {
+      "fn": "-exp(-0.25*x)",
+      "color": "#94a3b8"
+    }
+  ]
+}
+```
+
+  <h3>Markdown Source Code:</h3>
+  <pre><code class="language-markdown">```function-plot
+{
+  "title": "Damped Oscillation: f(x) = e^{-0.25x} \sin(3x)",
+  "height": "340px",
+  "xDomain": [-1, 10],
+  "yDomain": [-1.2, 1.2],
+  "grid": true,
+  "data": [
+    {
+      "fn": "exp(-0.25*x) * sin(3*x)",
+      "color": "#2563eb",
+      "derivative": {
+        "fn": "-0.25*exp(-0.25*x)*sin(3*x) + 3*exp(-0.25*x)*cos(3*x)",
+        "updateOnMouseMove": true
+      }
+    },
+    {
+      "fn": "exp(-0.25*x)",
+      "color": "#94a3b8"
+    },
+    {
+      "fn": "-exp(-0.25*x)",
+      "color": "#94a3b8"
+    }
+  ]
+}
+```</code></pre>
+
+  <hr>
+
+  <h2>3. 3D Scientific Surface Plots (Plotly)</h2>
+  <p>To plot 3D surfaces $z = f(x, y)$, use <code>```plotly</code> with a declarative formula:</p>
+
+```plotly
+{
+  "type": "surface",
+  "title": "Saddle Surface z = \sin(x) \cdot \cos(y)",
+  "fn": "Math.sin(x) * Math.cos(y)",
+  "xRange": [-3.14, 3.14, 35],
+  "yRange": [-3.14, 3.14, 35],
+  "colorscale": "Viridis",
+  "height": "400px"
+}
+```
+
+  <h3>Markdown Source Code:</h3>
+  <pre><code class="language-markdown">```plotly
+{
+  "type": "surface",
+  "title": "Saddle Surface z = \sin(x) \cdot \cos(y)",
+  "fn": "Math.sin(x) * Math.cos(y)",
+  "xRange": [-3.14, 3.14, 35],
+  "yRange": [-3.14, 3.14, 35],
+  "colorscale": "Viridis",
+  "height": "400px"
+}
+```</code></pre>
+
+  <hr>
+
+  <h2>4. LaTeX Math Equations (KaTeX)</h2>
+  <p>Render inline equations with <code>$ \dots $</code> and display block equations with <code>$$ \dots $$</code>:</p>
+
+  <p>Inline: The spectral gap $\gamma = \lambda_2 - \lambda_1$ governs the mixing time $	au_{	ext{mix}} = \mathcal{O}(1 / \gamma)$.</p>
+
+  <p>Display block:</p>
+  $$\mathcal{L}_{	ext{sym}} = D^{-1/2} (D - A) D^{-1/2} = I - D^{-1/2} A D^{-1/2}$$
+
+  <hr>
+
+  <h2>5. Academic Theorem Environments</h2>
+  <p>Wrap mathematical statements in HTML theorem containers:</p>
+
+  <div class="theorem">
+    <div class="theorem-title">Theorem 1 (Courant-Fischer Min-Max Theorem)</div>
+    Let $A \in \mathbb{R}^{n 	imes n}$ be a symmetric matrix with sorted eigenvalues $\lambda_1 \le \lambda_2 \le \dots \le \lambda_n$. Then:
+    $$\lambda_k = \min_{U \subseteq \mathbb{R}^n, \dim(U) = k} \max_{\mathbf{x} \in U, \mathbf{x} 
+eq \mathbf{0}} rac{\mathbf{x}^	op A \mathbf{x}}{\mathbf{x}^	op \mathbf{x}}$$
+  </div>
+
+  <div class="proof">
+    By the spectral decomposition $A = Q \Lambda Q^	op$, let $\mathbf{y} = Q^	op \mathbf{x}$, then apply the Rayleigh quotient directly.
+  </div>
+</div>
