@@ -13,7 +13,7 @@ A modern, high-performance static website and digital garden built specifically 
 - **No Jekyll / Zero Build Pipeline**: Pure static HTML5, CSS3, and modern JavaScript. Works immediately on GitHub Pages without needing Ruby, Bundler, or GitHub Actions.
 - **Interactive Force-Directed Graph Engine (D3.js)**:
   - Physics simulations with real-time charge repulsion, link distance, and collision forces.
-  - Multi-layout support: Force-directed, Concentric rings, Circular ring, and Hierarchical tree.
+  - Multi-layout support: Force-directed, alphabetical circular, and degree-based circular layouts.
   - Edge particle flow animations representing continuous diffusion and signal propagation.
   - Ego-network neighborhood highlighting on hover / selection.
   - Pan, zoom, drag-and-drop, full-screen mode, and high-resolution PNG image export.

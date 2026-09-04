@@ -643,7 +643,7 @@ class App {
           <h2>Key Technical Features of this Blog</h2>
           <ul>
             <li><strong>No Jekyll / Zero Build Pipeline:</strong> Pure client-side static application hosted directly on GitHub Pages with instant page transitions and SEO fallback.</li>
-            <li><strong>D3 Force-Directed Graph Engine:</strong> Multi-layout support (Force, Circular, Concentric, Hierarchical), edge particles, zooming, dragging, and image export.</li>
+            <li><strong>D3 Force-Directed Graph Engine:</strong> Force-directed, alphabetical circular, and degree-based circular layouts, edge particles, zooming, dragging, and image export.</li>
             <li><strong>In-Post Graph Embedding:</strong> Write <code>\`\`\`graph</code> JSON or <code>\`\`\`network</code> DSL inside standard Markdown to render interactive figures inline.</li>
             <li><strong>Bi-directional Wikilinks:</strong> Connect posts with <code>[[post-slug]]</code> syntax and automatically generate dynamic ego-networks.</li>
             <li><strong>LaTeX Math Typesetting:</strong> Powered by KaTeX for equations.</li>
