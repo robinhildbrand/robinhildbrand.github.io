@@ -12,18 +12,16 @@ class MarkdownProcessor {
       return { metadata: {}, content: rawMarkdown };
     }
 
-    const endIdx = trimmed.indexOf('
----', 3);
-    if (endIdx === -1) {
+    const fmMatch = trimmed.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
+    if (!fmMatch) {
       return { metadata: {}, content: rawMarkdown };
     }
 
-    const yamlBlock = trimmed.substring(3, endIdx).trim();
-    const content = trimmed.substring(endIdx + 4).trim();
+    const yamlBlock = fmMatch[1].trim();
+    const content = fmMatch[2].trim();
     const metadata = {};
 
-    yamlBlock.split('
-').forEach(line => {
+    yamlBlock.split(/\r?\n/).forEach(line => {
       const colonIdx = line.indexOf(':');
       if (colonIdx !== -1) {
         const key = line.substring(0, colonIdx).trim();
@@ -48,6 +46,19 @@ class MarkdownProcessor {
    * Process and render Markdown to sanitized HTML
    */
   static render(markdownContent) {
+    try {
+      return this._renderInternal(markdownContent);
+    } catch (err) {
+      console.error('MarkdownProcessor render error:', err);
+      return {
+        html: `<div class="callout callout-warning"><p>Failed to render markdown content: ${err.message}</p></div>`,
+        headings: [],
+        graphsToMount: []
+      };
+    }
+  }
+
+  static _renderInternal(markdownContent) {
     let processed = markdownContent;
 
     // 1. Preserve and protect LaTeX blocks before Marked parses them
@@ -89,21 +100,24 @@ class MarkdownProcessor {
     const renderer = new marked.Renderer();
     const graphsToMount = [];
 
-    renderer.code = function(code, language) {
+    renderer.code = function(arg1, arg2) {
+      const isObj = typeof arg1 === 'object' && arg1 !== null;
+      const code = isObj ? (arg1.text || '') : (arg1 || '');
+      const language = isObj ? (arg1.lang || '') : (arg2 || '');
       const lang = (language || '').toLowerCase().trim();
 
       // In-post JSON graph
       if (lang === 'graph') {
         const graphId = 'embed-graph-' + Math.random().toString(36).substring(2, 9);
         graphsToMount.push({ id: graphId, type: 'json', raw: code });
-        return `<div class="embedded-graph-container" id="${graphId}"></div>`;
+        return `<div class="embedded-graph-container" id="${graphId}"></div>\n`;
       }
 
       // In-post DSL network graph
       if (lang === 'network') {
         const graphId = 'embed-graph-' + Math.random().toString(36).substring(2, 9);
         graphsToMount.push({ id: graphId, type: 'dsl', raw: code });
-        return `<div class="embedded-graph-container" id="${graphId}"></div>`;
+        return `<div class="embedded-graph-container" id="${graphId}"></div>\n`;
       }
 
       // Standard highlighted code block with copy button
@@ -118,17 +132,20 @@ class MarkdownProcessor {
             <button class="copy-code-btn" onclick="navigator.clipboard.writeText(decodeURIComponent('${encodeURIComponent(code)}')).then(() => { this.innerText = 'Copied!'; setTimeout(() => this.innerText = 'Copy', 2000); })">Copy</button>
           </div>
           <pre><code class="hljs ${lang}">${highlighted}</code></pre>
-        </div>
+        </div>\n
       `;
     };
 
     // Header with slug IDs for Table of Contents
     const headings = [];
-    renderer.heading = function(text, level) {
-      const cleanText = text.replace(/<[^>]*>/g, '');
+    renderer.heading = function(arg1, arg2) {
+      const isObj = typeof arg1 === 'object' && arg1 !== null;
+      const text = isObj ? (arg1.text || '') : (arg1 || '');
+      const level = isObj ? (arg1.depth || 1) : (arg2 || 1);
+      const cleanText = String(text).replace(/<[^>]*>/g, '');
       const slug = cleanText.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       headings.push({ text: cleanText, level, slug });
-      return `<h${level} id="${slug}">${text}</h${level}>`;
+      return `<h${level} id="${slug}">${text}</h${level}>\n`;
     };
 
     // 3. Render HTML

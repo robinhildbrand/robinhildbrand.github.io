@@ -51,7 +51,7 @@ A modern, high-performance static website and digital garden built specifically 
 │       └── favicon.svg         # SVG vector network graph favicon
 ├── posts/
 │   ├── index.json              # Post metadata catalog (auto-generated)
-│   └── spectral-graph-theory.md
+│   └── exploring-degrees-marvel-dataset.md
 └── tools/
     ├── build_index.py          # Auto-generates posts/index.json from markdown files
     └── new_post.py             # CLI scaffold tool for creating new posts
@@ -97,7 +97,7 @@ author: "Robin Hildbrand"
 readTime: "7 min read"
 tags: ["topology", "graph-theory", "data-science"]
 summary: "Extracting persistent topological invariants from point clouds and high-dimensional graphs."
-wikilinks: ["spectral-graph-theory"]
+wikilinks: ["exploring-degrees-marvel-dataset"]
 ---
 
 Write your article here in standard Markdown.
@@ -124,7 +124,7 @@ Write your article here in standard Markdown.
 }
 ```
 
-Link to other posts using wikilinks: [[spectral-graph-theory]].
+Link to other posts using wikilinks: [[exploring-degrees-marvel-dataset]].
 ```
 
 2. Rebuild the post manifest:

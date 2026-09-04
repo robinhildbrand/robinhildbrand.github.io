@@ -208,138 +208,149 @@ class App {
 
   // 3. Single Post View
   async renderSinglePostView(container, slug) {
-    const post = await this.store.getPostBySlug(slug);
+    try {
+      const post = await this.store.getPostBySlug(slug);
 
-    if (!post || !post.rawContent) {
+      if (!post || !post.rawContent) {
+        container.innerHTML = `
+          <div class="container" style="padding: 6rem 1rem; text-align: center;">
+            <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Post Not Found</h1>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">The post "${slug}" could not be loaded.</p>
+            <a href="#/posts" class="btn btn-primary">Back to Articles</a>
+          </div>
+        `;
+        return;
+      }
+
+      const { metadata, content } = MarkdownProcessor.parseFrontmatter(post.rawContent);
+      const postTitle = metadata.title || post.title || slug;
+      const postDate = metadata.date || post.date || '';
+      const postAuthor = metadata.author || post.author || 'Robin Hildbrand';
+      const postReadTime = metadata.readTime || post.readTime || '6 min read';
+
+      const { html, headings, graphsToMount } = MarkdownProcessor.render(content);
+
+      // Prev / Next Navigation
+      const allPosts = this.store.posts;
+      const currentIndex = allPosts.findIndex(p => p.slug === slug);
+      const prevPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
+      const nextPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
+
+      container.innerHTML = `
+        <div class="reading-progress-bar" id="reading-progress"></div>
+        <div class="container">
+          <div class="post-layout">
+            <article class="post-main">
+              <header class="post-header">
+                <nav class="post-breadcrumb">
+                  <a href="#/">Home</a>
+                  <span>/</span>
+                  <a href="#/posts">Articles</a>
+                  <span>/</span>
+                  <span>${postTitle}</span>
+                </nav>
+                <h1 class="post-title">${postTitle}</h1>
+                <div class="post-meta-bar">
+                  <div class="post-author">
+                    <img src="assets/images/avatar.svg" alt="${postAuthor}" class="author-avatar">
+                    <span>${postAuthor}</span>
+                  </div>
+                  <span>•</span>
+                  <span>📅 ${postDate}</span>
+                  <span>•</span>
+                  <span>⏱️ ${postReadTime}</span>
+                </div>
+                <div class="tag-list" style="margin-top: 1rem;">
+                </div>
+              </header>
+
+              <div class="prose" id="article-content">
+                ${html}
+              </div>
+
+              <nav class="post-navigation">
+                ${prevPost ? `
+                  <a href="#/post/${prevPost.slug}" class="nav-post-card">
+                    <span class="nav-post-direction">← Previous Post</span>
+                    <span class="nav-post-title">${prevPost.title}</span>
+                  </a>
+                ` : `<div></div>`}
+                ${nextPost ? `
+                  <a href="#/post/${nextPost.slug}" class="nav-post-card" style="text-align: right;">
+                    <span class="nav-post-direction">Next Post →</span>
+                    <span class="nav-post-title">${nextPost.title}</span>
+                  </a>
+                ` : `<div></div>`}
+              </nav>
+            </article>
+
+            <aside class="post-sidebar">
+              <div class="sidebar-card">
+                <div class="sidebar-card-title">🕸️ Article Connections</div>
+                <p style="font-size: 0.775rem; color: var(--text-secondary);">Interactive ego-network of related article connections.</p>
+                <div class="mini-graph-container" id="post-ego-graph"></div>
+                <a href="#/graph" style="font-size: 0.775rem; font-weight: 600; display: block; margin-top: 0.65rem; text-align: right;">Open Global Graph ↗</a>
+              </div>
+
+              ${headings.length > 1 ? `
+                <div class="sidebar-card" style="margin-top: 1.5rem;">
+                  <div class="sidebar-card-title">📑 Table of Contents</div>
+                  <ul class="toc-list">
+                    ${headings.map(h => `
+                      <li class="toc-item-${h.level}">
+                        <a href="#${h.slug}" class="toc-link" onclick="event.preventDefault(); document.getElementById('${h.slug}').scrollIntoView({ behavior: 'smooth' });">${h.text}</a>
+                      </li>
+                    `).join('')}
+                  </ul>
+                </div>
+              ` : ''}
+            </aside>
+          </div>
+        </div>
+      `;
+
+      // 1. Mount embedded interactive graphs
+      MarkdownProcessor.mountGraphs(graphsToMount);
+
+      // 2. Mount Post Ego Network
+      const egoEl = document.getElementById('post-ego-graph');
+      if (egoEl) {
+        const egoData = this.store.getLocalGraphForPost(slug);
+        const egoGraph = new NetworkGraph(egoEl, {
+          layout: 'force',
+          enableParticles: false,
+          chargeStrength: -120,
+          linkDistance: 60,
+          showLabels: true,
+          onNodeClick: (node) => {
+            if (node.slug && node.slug !== slug) {
+              window.location.hash = `#/post/${node.slug}`;
+            }
+          }
+        });
+        egoGraph.setData(egoData);
+        this.activeGraphInstances.push(egoGraph);
+      }
+
+      // 3. Setup Reading Progress Bar
+      const progressBar = document.getElementById('reading-progress');
+      const updateProgress = () => {
+        const total = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = total > 0 ? (window.scrollY / total) * 100 : 0;
+        if (progressBar) progressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+      };
+      window.addEventListener('scroll', updateProgress);
+      updateProgress();
+    } catch (err) {
+      console.error('Error rendering single post view:', err);
       container.innerHTML = `
         <div class="container" style="padding: 6rem 1rem; text-align: center;">
-          <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Post Not Found</h1>
-          <p style="color: var(--text-secondary); margin-bottom: 2rem;">The post "${slug}" could not be loaded.</p>
+          <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Failed to Render Article</h1>
+          <p style="color: var(--text-secondary); margin-bottom: 2rem;">${err.message || 'An unexpected error occurred while loading this post.'}</p>
           <a href="#/posts" class="btn btn-primary">Back to Articles</a>
         </div>
       `;
-      return;
     }
-
-    const { metadata, content } = MarkdownProcessor.parseFrontmatter(post.rawContent);
-    const postTitle = metadata.title || post.title || slug;
-    const postDate = metadata.date || post.date || '';
-    const postAuthor = metadata.author || post.author || 'Robin Hildbrand';
-    const postReadTime = metadata.readTime || post.readTime || '6 min read';
-
-    const { html, headings, graphsToMount } = MarkdownProcessor.render(content);
-
-    // Prev / Next Navigation
-    const allPosts = this.store.posts;
-    const currentIndex = allPosts.findIndex(p => p.slug === slug);
-    const prevPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
-    const nextPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
-
-    container.innerHTML = `
-      <div class="reading-progress-bar" id="reading-progress"></div>
-      <div class="container">
-        <div class="post-layout">
-          <article class="post-main">
-            <header class="post-header">
-              <nav class="post-breadcrumb">
-                <a href="#/">Home</a>
-                <span>/</span>
-                <a href="#/posts">Articles</a>
-                <span>/</span>
-                <span>${postTitle}</span>
-              </nav>
-              <h1 class="post-title">${postTitle}</h1>
-              <div class="post-meta-bar">
-                <div class="post-author">
-                  <img src="assets/images/avatar.svg" alt="${postAuthor}" class="author-avatar">
-                  <span>${postAuthor}</span>
-                </div>
-                <span>•</span>
-                <span>📅 ${postDate}</span>
-                <span>•</span>
-                <span>⏱️ ${postReadTime}</span>
-              </div>
-              <div class="tag-list" style="margin-top: 1rem;">
-              </div>
-            </header>
-
-            <div class="prose" id="article-content">
-              ${html}
-            </div>
-
-            <nav class="post-navigation">
-              ${prevPost ? `
-                <a href="#/post/${prevPost.slug}" class="nav-post-card">
-                  <span class="nav-post-direction">← Previous Post</span>
-                  <span class="nav-post-title">${prevPost.title}</span>
-                </a>
-              ` : `<div></div>`}
-              ${nextPost ? `
-                <a href="#/post/${nextPost.slug}" class="nav-post-card" style="text-align: right;">
-                  <span class="nav-post-direction">Next Post →</span>
-                  <span class="nav-post-title">${nextPost.title}</span>
-                </a>
-              ` : `<div></div>`}
-            </nav>
-          </article>
-
-          <aside class="post-sidebar">
-            <div class="sidebar-card">
-              <div class="sidebar-card-title">🕸️ Article Connections</div>
-              <p style="font-size: 0.775rem; color: var(--text-secondary);">Interactive ego-network of related article connections.</p>
-              <div class="mini-graph-container" id="post-ego-graph"></div>
-              <a href="#/graph" style="font-size: 0.775rem; font-weight: 600; display: block; margin-top: 0.65rem; text-align: right;">Open Global Graph ↗</a>
-            </div>
-
-            ${headings.length > 1 ? `
-              <div class="sidebar-card" style="margin-top: 1.5rem;">
-                <div class="sidebar-card-title">📑 Table of Contents</div>
-                <ul class="toc-list">
-                  ${headings.map(h => `
-                    <li class="toc-item-${h.level}">
-                      <a href="#${h.slug}" class="toc-link" onclick="event.preventDefault(); document.getElementById('${h.slug}').scrollIntoView({ behavior: 'smooth' });">${h.text}</a>
-                    </li>
-                  `).join('')}
-                </ul>
-              </div>
-            ` : ''}
-          </aside>
-        </div>
-      </div>
-    `;
-
-    // 1. Mount embedded interactive graphs
-    MarkdownProcessor.mountGraphs(graphsToMount);
-
-    // 2. Mount Post Ego Network
-    const egoEl = document.getElementById('post-ego-graph');
-    if (egoEl) {
-      const egoData = this.store.getLocalGraphForPost(slug);
-      const egoGraph = new NetworkGraph(egoEl, {
-        layout: 'force',
-        enableParticles: false,
-        chargeStrength: -120,
-        linkDistance: 60,
-        showLabels: true,
-        onNodeClick: (node) => {
-          if (node.slug && node.slug !== slug) {
-            window.location.hash = `#/post/${node.slug}`;
-          }
-        }
-      });
-      egoGraph.setData(egoData);
-      this.activeGraphInstances.push(egoGraph);
-    }
-
-    // 3. Setup Reading Progress Bar
-    const progressBar = document.getElementById('reading-progress');
-    const updateProgress = () => {
-      const total = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = total > 0 ? (window.scrollY / total) * 100 : 0;
-      if (progressBar) progressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
-    };
-    window.addEventListener('scroll', updateProgress);
-    updateProgress();
   }
 
   // 4. Global Graph Explorer View

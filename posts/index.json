@@ -1,17 +1,18 @@
 [
   {
-    "slug": "spectral-graph-theory",
-    "title": "Foundations of Spectral Graph Theory: Graph Laplacians & Diffusion",
-    "date": "2026-09-02",
+    "slug": "exploring-degrees-marvel-dataset",
+    "title": "Exploring Degrees in the Marvel Dataset",
+    "date": "2026-09-04",
     "author": "Robin Hildbrand",
     "readTime": "8 min read",
     "tags": [
-      "graph-theory",
-      "linear-algebra",
-      "spectral-methods"
+      "marvel",
+      "network-analysis",
+      "degree-distribution",
+      "complex-networks"
     ],
-    "summary": "An exploration of graph Laplacians, eigenvalue spectra, Rayleigh quotients, and continuous heat diffusion across complex networks.",
+    "summary": "An empirical analysis of node degrees, in/out-degree asymmetries, power-law distributions, and central superhero hubs across the Wikipedia Marvel Comics network.",
     "wikilinks": [],
-    "file": "posts/spectral-graph-theory.md"
+    "file": "posts/exploring-degrees-marvel-dataset.md"
   }
 ]

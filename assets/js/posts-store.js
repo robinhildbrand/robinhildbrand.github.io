@@ -328,54 +328,15 @@ class PostsStore {
   getFallbackIndex() {
     return [
       {
-        slug: 'spectral-graph-theory',
-        title: 'Foundations of Spectral Graph Theory: Graph Laplacians & Diffusion',
-        date: '2026-09-02',
+        slug: 'exploring-degrees-marvel-dataset',
+        title: 'Exploring Degrees in the Marvel Dataset',
+        date: '2026-09-04',
         author: 'Robin Hildbrand',
         readTime: '8 min read',
-        tags: ['graph-theory', 'linear-algebra', 'spectral-methods'],
-        summary: 'An exploration of graph Laplacians, eigenvalue spectra, Rayleigh quotients, and continuous heat diffusion across complex networks.',
-        wikilinks: ['graph-neural-networks', 'complex-networks-diffusion']
-      },
-      {
-        slug: 'graph-neural-networks',
-        title: 'Graph Neural Networks: From Spatial Convolutions to Message Passing',
-        date: '2026-08-28',
-        author: 'Robin Hildbrand',
-        readTime: '10 min read',
-        tags: ['machine-learning', 'graph-theory', 'deep-learning'],
-        summary: 'Understanding spatial message passing schemes, permutation equivariance, spectral GCNs, and attention mechanisms on non-Euclidean domains.',
-        wikilinks: ['spectral-graph-theory', 'knowledge-graphs-and-llms']
-      },
-      {
-        slug: 'knowledge-graphs-and-llms',
-        title: 'Bridging Knowledge Graphs and Large Language Models for Reliable Reasoning',
-        date: '2026-08-20',
-        author: 'Robin Hildbrand',
-        readTime: '7 min read',
-        tags: ['knowledge-graphs', 'llm', 'machine-learning'],
-        summary: 'How structured ontologies and entity-relation subgraphs mitigate hallucination in LLMs via Graph-RAG architectures.',
-        wikilinks: ['graph-neural-networks']
-      },
-      {
-        slug: 'complex-networks-diffusion',
-        title: 'Information Diffusion and Epidemics on Scale-Free Networks',
-        date: '2026-08-14',
-        author: 'Robin Hildbrand',
-        readTime: '9 min read',
-        tags: ['complex-systems', 'graph-theory', 'diffusion'],
-        summary: 'Simulating SIR epidemic models and information cascades on Barabási-Albert and Watts-Strogatz network topologies.',
-        wikilinks: ['spectral-graph-theory']
-      },
-      {
-        slug: 'interactive-graph-tutorial',
-        title: 'How to Publish Posts with Interactive Network Graphs on GitHub Pages',
-        date: '2026-08-05',
-        author: 'Robin Hildbrand',
-        readTime: '5 min read',
-        tags: ['tutorial', 'github-pages', 'data-viz'],
-        summary: 'A complete step-by-step guide to writing blog posts with embedded force-directed graphs, network DSL syntax, and bi-directional wikilinks.',
-        wikilinks: ['spectral-graph-theory', 'knowledge-graphs-and-llms']
+        tags: ['marvel', 'network-analysis', 'degree-distribution', 'complex-networks'],
+        summary: 'An empirical analysis of node degrees, in/out-degree asymmetries, power-law distributions, and central superhero hubs across the Wikipedia Marvel Comics network.',
+        wikilinks: [],
+        file: 'posts/exploring-degrees-marvel-dataset.md'
       }
     ];
   }

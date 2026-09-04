@@ -19,7 +19,7 @@ author: "Robin Hildbrand"
 readTime: "6 min read"
 tags: ["graph-theory", "machine-learning"]
 summary: "A concise executive summary of this post."
-wikilinks: ["spectral-graph-theory"]
+wikilinks: ["exploring-degrees-marvel-dataset"]
 ---
 
 Write your introductory thoughts here. You can use math like $E = mc^2$ or display formulas:
@@ -59,7 +59,7 @@ You can also embed custom JSON graphs with custom colors and weights:
 }}
 ```
 
-Connect to other articles with wikilinks like [[spectral-graph-theory]].
+Connect to other articles with wikilinks like [[exploring-degrees-marvel-dataset]].
 """
 
 def main():
