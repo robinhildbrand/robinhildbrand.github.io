@@ -382,9 +382,8 @@ class App {
                 </label>
                 <select class="control-select" id="graph-layout-select">
                   <option value="force">Force-Directed Physics</option>
-                  <option value="concentric">Concentric Rings</option>
-                  <option value="circular">Circular Ring</option>
-                  <option value="tree">Hierarchical Tree</option>
+                  <option value="circle-alpha">Circle by A-Z</option>
+                  <option value="circle-degree">Circle by Degree</option>
                 </select>
               </div>
               <div class="control-group">
