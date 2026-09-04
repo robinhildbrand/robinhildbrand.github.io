@@ -82,11 +82,6 @@ class App {
       await this.renderSinglePostView(appEl, slug);
     } else if (hash === '#/graph') {
       await this.renderGlobalGraphView(appEl);
-    } else if (hash === '#/tags') {
-      await this.renderTagsView(appEl);
-    } else if (hash.startsWith('#/tag/')) {
-      const tag = decodeURIComponent(hash.replace('#/tag/', '').split('?')[0]);
-      await this.renderSingleTagView(appEl, tag);
     } else if (hash === '#/about') {
       await this.renderAboutView(appEl);
     } else {
@@ -103,7 +98,7 @@ class App {
   updateActiveNavLinks(hash) {
     document.querySelectorAll('.nav-link').forEach(link => {
       const href = link.getAttribute('href');
-      if (href === hash || (href === '#/posts' && hash.startsWith('#/post/')) || (href === '#/tags' && hash.startsWith('#/tag/'))) {
+      if (href === hash || (href === '#/posts' && hash.startsWith('#/post/'))) {
         link.classList.add('active');
       } else {
         link.classList.remove('active');
@@ -136,7 +131,6 @@ class App {
               <div class="hero-cta-group">
                 <a href="#/posts" class="btn btn-primary">Read Articles →</a>
                 <a href="#/graph" class="btn btn-secondary">Explore Knowledge Graph 🕸️</a>
-                <a href="#/post/interactive-graph-tutorial" class="btn btn-secondary">Graph Tutorial 📖</a>
               </div>
             </div>
             <div class="hero-graph-preview">
@@ -163,24 +157,6 @@ class App {
           <div class="post-grid">
             ${featuredPosts.map(post => this.renderPostCard(post)).join('')}
           </div>
-
-          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-xl); padding: 2.5rem; margin-top: 1rem; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 2rem; align-items: center;">
-            <div>
-              <span class="tag-badge" style="margin-bottom: 0.75rem; display: inline-block;">Visual Engine</span>
-              <h3 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 0.75rem;">Embed Network Graphs Directly in Markdown</h3>
-              <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem;">
-                Write simple <code>\`\`\`graph</code> JSON or <code>\`\`\`network</code> text blocks. The visual engine renders physics simulations, diffusion animations, node clustering, and exports high-res figures automatically.
-              </p>
-              <a href="#/post/interactive-graph-tutorial" class="btn btn-primary">Learn How to Publish Graphs →</a>
-            </div>
-            <div style="background: var(--bg-muted); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.25rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6;">
-              <span style="color: var(--primary);">\`\`\`network</span><br>
-              Graph Laplacian -&gt; Spectral Clustering : eigen-decomposition<br>
-              Linear Algebra -&gt; Graph Laplacian : foundations<br>
-              Spectral Clustering -&gt; Community Detection : partitions<br>
-              <span style="color: var(--primary);">\`\`\`</span>
-            </div>
-          </div>
         </div>
       </section>
     `;
@@ -199,7 +175,6 @@ class App {
           if (node.slug) {
             window.location.hash = `#/post/${node.slug}`;
           } else if (node.type === 'tag') {
-            window.location.hash = `#/tag/${node.label.replace('#', '')}`;
           }
         }
       });
@@ -211,7 +186,6 @@ class App {
   // 2. Posts List View
   async renderPostsListView(container) {
     const posts = await this.store.loadIndex();
-    const tags = Array.from(this.store.tagsMap.keys());
 
     container.innerHTML = `
       <div class="container" style="padding: 3.5rem 1rem 5rem;">
@@ -223,14 +197,6 @@ class App {
           <div style="display: flex; gap: 0.5rem; align-items: center;">
             <span style="font-size: 0.85rem; color: var(--text-muted);">${posts.length} posts published</span>
           </div>
-        </div>
-
-        <div style="margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-          <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-right: 0.5rem;">Filter by topic:</span>
-          <a href="#/posts" class="tag-badge active">All (${posts.length})</a>
-          ${tags.map(tag => `
-            <a href="#/tag/${tag}" class="tag-badge">#${tag} (${this.store.tagsMap.get(tag).length})</a>
-          `).join('')}
         </div>
 
         <div class="post-grid">
@@ -260,7 +226,6 @@ class App {
     const postDate = metadata.date || post.date || '';
     const postAuthor = metadata.author || post.author || 'Robin Hildbrand';
     const postReadTime = metadata.readTime || post.readTime || '6 min read';
-    const postTags = metadata.tags || post.tags || [];
 
     const { html, headings, graphsToMount } = MarkdownProcessor.render(content);
 
@@ -295,7 +260,6 @@ class App {
                 <span>⏱️ ${postReadTime}</span>
               </div>
               <div class="tag-list" style="margin-top: 1rem;">
-                ${postTags.map(t => `<a href="#/tag/${t}" class="tag-badge">#${t}</a>`).join('')}
               </div>
             </header>
 
@@ -322,7 +286,7 @@ class App {
           <aside class="post-sidebar">
             <div class="sidebar-card">
               <div class="sidebar-card-title">🕸️ Article Connections</div>
-              <p style="font-size: 0.775rem; color: var(--text-secondary);">Interactive ego-network of wikilinks & topic clusters for this article.</p>
+              <p style="font-size: 0.775rem; color: var(--text-secondary);">Interactive ego-network of related article connections.</p>
               <div class="mini-graph-container" id="post-ego-graph"></div>
               <a href="#/graph" style="font-size: 0.775rem; font-weight: 600; display: block; margin-top: 0.65rem; text-align: right;">Open Global Graph ↗</a>
             </div>
@@ -360,8 +324,6 @@ class App {
         onNodeClick: (node) => {
           if (node.slug && node.slug !== slug) {
             window.location.hash = `#/post/${node.slug}`;
-          } else if (node.type === 'tag') {
-            window.location.hash = `#/tag/${node.label.replace('#', '')}`;
           }
         }
       });
@@ -508,10 +470,6 @@ class App {
           inspectorBtn.style.display = 'block';
           inspectorBtn.href = `#/post/${node.slug}`;
           inspectorBtn.innerText = 'Read Article →';
-        } else if (node.type === 'tag') {
-          inspectorBtn.style.display = 'block';
-          inspectorBtn.href = `#/tag/${node.label.replace('#', '')}`;
-          inspectorBtn.innerText = 'View Tag Posts →';
         } else {
           inspectorBtn.style.display = 'none';
         }
@@ -657,6 +615,9 @@ class App {
 
   // 7. About View
   async renderAboutView(container) {
+    container.innerHTML = '<div class="container content-wrapper" style="padding: 4rem 1rem 5rem;"><div class="prose"><p>This is an individual group website for the course Social Graphs and Interactions at DTU.</p></div></div>';
+    return;
+
     container.innerHTML = `
       <div class="container content-wrapper" style="padding: 4rem 1rem 5rem;">
         <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2.5rem;">
@@ -760,7 +721,7 @@ class App {
     const openModal = () => {
       modalBackdrop.classList.add('open');
       searchInput.value = '';
-      resultsContainer.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">Type to search posts, topics, or network entities...</div>';
+      resultsContainer.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">Type to search posts or network entities...</div>';
       setTimeout(() => searchInput.focus(), 50);
     };
 
@@ -789,7 +750,7 @@ class App {
       const results = this.store.search(q);
 
       if (!q.trim()) {
-        resultsContainer.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">Type to search posts, topics, or network entities...</div>';
+        resultsContainer.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">Type to search posts or network entities...</div>';
         return;
       }
 

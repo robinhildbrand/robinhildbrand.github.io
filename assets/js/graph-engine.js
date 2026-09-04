@@ -14,7 +14,7 @@ class NetworkGraph {
     this.options = {
       width: options.width || this.container.clientWidth || 600,
       height: options.height || this.container.clientHeight || 400,
-      layout: options.layout || 'force', // 'force', 'circular', 'concentric', 'tree'
+      layout: options.layout || 'force', // 'force', 'circle-alpha', 'circle-degree'
       nodeRadius: options.nodeRadius || 7,
       nodeColor: options.nodeColor || '#6366f1',
       linkColor: options.linkColor || '#475569',
@@ -152,6 +152,10 @@ class NetworkGraph {
     if (!nodes.length) return;
 
     if (layoutName === 'force') {
+      nodes.forEach(node => {
+        node.fx = null;
+        node.fy = null;
+      });
       this.simulation = d3.forceSimulation(nodes)
         .force('link', d3.forceLink(links).id(d => d.id).distance(d => d.distance || this.options.linkDistance))
         .force('charge', d3.forceManyBody().strength(this.options.chargeStrength))
@@ -160,63 +164,23 @@ class NetworkGraph {
         .alpha(1)
         .on('tick', () => this.render());
 
-    } else if (layoutName === 'circular') {
+    } else if (layoutName === 'circle-alpha' || layoutName === 'circle-degree') {
+      const orderedNodes = [...nodes].sort((a, b) => {
+        if (layoutName === 'circle-degree') {
+          const getId = endpoint => typeof endpoint === 'object' ? endpoint.id : endpoint;
+          const degreeA = links.reduce((degree, link) => degree + (getId(link.source) === a.id || getId(link.target) === a.id ? 1 : 0), 0);
+          const degreeB = links.reduce((degree, link) => degree + (getId(link.source) === b.id || getId(link.target) === b.id ? 1 : 0), 0);
+          return degreeB - degreeA || (a.label || a.id).localeCompare(b.label || b.id);
+        }
+        return (a.label || a.id).localeCompare(b.label || b.id);
+      });
       const radius = Math.min(this.width, this.height) * 0.38;
-      const angleStep = (2 * Math.PI) / nodes.length;
-      nodes.forEach((node, i) => {
+      const angleStep = (2 * Math.PI) / orderedNodes.length;
+      orderedNodes.forEach((node, i) => {
         node.fx = this.width / 2 + radius * Math.cos(i * angleStep);
         node.fy = this.height / 2 + radius * Math.sin(i * angleStep);
         node.x = node.fx;
         node.y = node.fy;
-      });
-      this.render();
-
-    } else if (layoutName === 'concentric') {
-      // Cluster by group or degree
-      const groups = Array.from(new Set(nodes.map(n => n.group || 'default')));
-      const centerNode = nodes[0];
-      if (centerNode) {
-        centerNode.fx = this.width / 2;
-        centerNode.fy = this.height / 2;
-        centerNode.x = centerNode.fx;
-        centerNode.y = centerNode.fy;
-      }
-      
-      const otherNodes = nodes.slice(1);
-      const radiusStep = Math.min(this.width, this.height) * 0.35 / (groups.length || 1);
-      
-      otherNodes.forEach((node, i) => {
-        const groupIdx = groups.indexOf(node.group || 'default') + 1;
-        const ringRadius = radiusStep * (groupIdx || 1);
-        const angle = (2 * Math.PI * i) / otherNodes.length;
-        node.fx = this.width / 2 + ringRadius * Math.cos(angle);
-        node.fy = this.height / 2 + ringRadius * Math.sin(angle);
-        node.x = node.fx;
-        node.y = node.fy;
-      });
-      this.render();
-
-    } else if (layoutName === 'tree') {
-      // Stratify / Hierarchical layout
-      const levels = {};
-      nodes.forEach((node, idx) => {
-        const lvl = node.level !== undefined ? node.level : (idx % 4);
-        if (!levels[lvl]) levels[lvl] = [];
-        levels[lvl].push(node);
-      });
-
-      const levelKeys = Object.keys(levels).sort((a,b) => a - b);
-      const dy = this.height / (levelKeys.length + 1);
-
-      levelKeys.forEach((lvlKey, rowIdx) => {
-        const rowNodes = levels[lvlKey];
-        const dx = this.width / (rowNodes.length + 1);
-        rowNodes.forEach((node, colIdx) => {
-          node.fx = dx * (colIdx + 1);
-          node.fy = dy * (rowIdx + 1);
-          node.x = node.fx;
-          node.y = node.fy;
-        });
       });
       this.render();
     }

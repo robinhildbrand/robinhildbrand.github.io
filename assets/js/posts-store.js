@@ -8,6 +8,7 @@ class PostsStore {
     this.posts = [];
     this.postContentCache = new Map();
     this.tagsMap = new Map(); // tag -> array of posts
+    this.globalGraphData = { nodes: [], links: [] };
     this.isLoaded = false;
   }
 
@@ -42,6 +43,23 @@ class PostsStore {
         this.tagsMap.get(cleanTag).push(post);
       });
     });
+
+    try {
+      const [nodesResponse, edgesResponse] = await Promise.all([
+        fetch('week1_nodes.tsv'),
+        fetch('week1_edges.tsv')
+      ]);
+      if (!nodesResponse.ok || !edgesResponse.ok) throw new Error('Graph dataset could not be loaded');
+
+      const nodeData = GraphParser.parseTSV(await nodesResponse.text(), 'nodes');
+      const edgeData = GraphParser.parseTSV(await edgesResponse.text(), 'edges');
+      this.globalGraphData = {
+        nodes: nodeData.nodes,
+        links: edgeData.links
+      };
+    } catch (e) {
+      console.error('Error loading the Marvel knowledge graph:', e);
+    }
 
     this.isLoaded = true;
     return this.posts;
@@ -78,6 +96,13 @@ class PostsStore {
    * Build the complete global knowledge graph (Posts + Tags + Wikilinks)
    */
   getGlobalGraphData() {
+    if (this.globalGraphData.nodes.length > 0) {
+      return {
+        nodes: this.globalGraphData.nodes.map(node => ({ ...node })),
+        links: this.globalGraphData.links.map(link => ({ ...link }))
+      };
+    }
+
     const nodes = [];
     const links = [];
     const nodeIds = new Set();

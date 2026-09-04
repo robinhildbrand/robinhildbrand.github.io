@@ -13,8 +13,7 @@ class GraphParser {
    * NodeA { group: "math", size: 14 }
    */
   static parseDSL(text) {
-    const lines = text.split('
-');
+    const lines = text.split('\n');
     const nodesMap = new Map();
     const links = [];
 
@@ -118,6 +117,53 @@ class GraphParser {
   }
 
   /**
+   * Parse a tab-separated node or edge dataset.
+   */
+  static parseTSV(text, kind) {
+    const lines = text.split(/\r?\n/).filter(line => line.trim());
+    const headerIndex = lines.findIndex(line => {
+      const headers = line.replace(/^#\s*/, '').split('\t');
+      return kind === 'nodes' ? headers.includes('node_id') : headers.includes('source');
+    });
+    if (headerIndex < 0) return { nodes: [], links: [] };
+
+    const headers = lines[headerIndex].replace(/^#\s*/, '').split('\t');
+    const dataLines = lines.slice(headerIndex + 1).filter(line => !line.trim().startsWith('#'));
+    const rows = dataLines.map(line => {
+      const values = line.split('\t');
+      return headers.reduce((row, header, index) => {
+        row[header] = values[index] || '';
+        return row;
+      }, {});
+    });
+
+    if (kind === 'nodes') {
+      return {
+        nodes: rows.map(row => ({
+          id: row.node_id,
+          label: row.name || row.node_id,
+          group: 'marvel-character',
+          size: 7,
+          description: row.description || '',
+          wikidataId: row.wikidata_id || '',
+          url: row.url || ''
+        })),
+        links: []
+      };
+    }
+
+    return {
+      nodes: [],
+      links: rows.map(row => ({
+        source: row.source,
+        target: row.target,
+        directed: true,
+        weight: 1
+      }))
+    };
+  }
+
+  /**
    * Create interactive graph DOM component with full toolbar
    */
   static mountGraph(containerElement, graphData, options = {}) {
@@ -130,7 +176,7 @@ class GraphParser {
           <span>${options.title || 'Interactive View'}</span>
         </div>
         <div class="graph-toolbar">
-          <button class="graph-btn" data-action="layout" title="Cycle Layout (Force / Circle / Tree)">🔄</button>
+          <button class="graph-btn" data-action="layout" title="Cycle Layout (Force / A-Z Circle / Degree Circle)">🔄</button>
           <button class="graph-btn" data-action="physics" title="Toggle Physics Simulation">⚡</button>
           <button class="graph-btn" data-action="particles" title="Toggle Diffusion Particles">✨</button>
           <button class="graph-btn" data-action="labels" title="Toggle Labels">🏷</button>
@@ -180,7 +226,7 @@ class GraphParser {
       labelsBtn.classList.toggle('active', visible);
     };
 
-    const layouts = ['force', 'circular', 'concentric', 'tree'];
+    const layouts = ['force', 'circle-alpha', 'circle-degree'];
     let currentLayoutIdx = layouts.indexOf(options.layout || 'force');
     toolbar.querySelector('[data-action="layout"]').onclick = () => {
       currentLayoutIdx = (currentLayoutIdx + 1) % layouts.length;

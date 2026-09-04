@@ -5,7 +5,7 @@ author: "Robin Hildbrand"
 readTime: "8 min read"
 tags: ["graph-theory", "linear-algebra", "spectral-methods"]
 summary: "An exploration of graph Laplacians, eigenvalue spectra, Rayleigh quotients, and continuous heat diffusion across complex networks."
-wikilinks: ["graph-neural-networks", "complex-networks-diffusion"]
+wikilinks: []
 ---
 
 Spectral graph theory studies the properties of graphs via the eigenvalues and eigenvectors of matrices associated with them, most notably the **Graph Laplacian**.
@@ -107,4 +107,3 @@ $$\mathbf{u}(t) = \exp(-t \mathbf{L}) \mathbf{u}_0 = \sum_{k=1}^n e^{-\lambda_k 
 As $t 	o \infty$, all modes with $\lambda_k > 0$ decay exponentially, and the heat converges uniformly to the steady-state average across the connected component.
 
 > [!TIP]
-> Spectral graph theory serves as the theoretical bedrock for [[graph-neural-networks]] and modeling epidemic propagation in [[complex-networks-diffusion]].

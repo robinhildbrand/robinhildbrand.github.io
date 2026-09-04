@@ -51,11 +51,7 @@ A modern, high-performance static website and digital garden built specifically 
 │       └── favicon.svg         # SVG vector network graph favicon
 ├── posts/
 │   ├── index.json              # Post metadata catalog (auto-generated)
-│   ├── spectral-graph-theory.md
-│   ├── graph-neural-networks.md
-│   ├── knowledge-graphs-and-llms.md
-│   ├── complex-networks-diffusion.md
-│   └── interactive-graph-tutorial.md
+│   └── spectral-graph-theory.md
 └── tools/
     ├── build_index.py          # Auto-generates posts/index.json from markdown files
     └── new_post.py             # CLI scaffold tool for creating new posts
