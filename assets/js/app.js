@@ -60,6 +60,7 @@ class App {
   async handleRoute() {
     // Clear active graphs from previous view
     this.activeGraphInstances.forEach(g => {
+      if (g && typeof g.stopPathTrace === 'function') g.stopPathTrace();
       if (g && typeof g.destroy === 'function') g.destroy();
     });
     this.activeGraphInstances = [];
@@ -361,6 +362,29 @@ class App {
 
     container.innerHTML = `
       <div class="global-graph-page">
+        <div class="graph-instruction-popup" id="graph-instruction-popup">
+          <div class="graph-instruction-card">
+            <div class="graph-instruction-icon">🕸️</div>
+            <h2 class="graph-instruction-title">Marvel Character Network</h2>
+            <p class="graph-instruction-text">
+              Explore connections between <strong>303 Marvel characters</strong> derived from Wikipedia hyperlinks.
+              Hover over any node to see its details and connections.
+            </p>
+            <div class="graph-instruction-divider"></div>
+            <h3 class="graph-instruction-subtitle">Path Tracer</h3>
+            <p class="graph-instruction-text">
+              Click any node to set it as <span style="color:#22c55e;font-weight:700;">source</span>, then click another node to set it as <span style="color:#ef4444;font-weight:700;">target</span>.
+              A green ball will follow the shortest path between them, pausing at each character to show its connections.
+            </p>
+            <div class="graph-instruction-tips">
+              <span>🔍 Scroll to zoom</span>
+              <span>✋ Drag to pan</span>
+              <span>🖱️ Click + drag nodes to rearrange</span>
+            </div>
+            <button class="graph-instruction-btn" id="graph-instruction-dismiss">Got it</button>
+          </div>
+        </div>
+
         <div class="global-graph-main">
           <div class="global-graph-canvas-container" id="global-graph-canvas">
             <div class="graph-hud-controls">
@@ -395,6 +419,7 @@ class App {
                   <option value="force">Force-Directed Physics</option>
                   <option value="circle-alpha">Circle by A-Z</option>
                   <option value="circle-degree">Circle by Degree</option>
+                  <option value="random">Random</option>
                 </select>
               </div>
               <div class="control-group">
@@ -422,6 +447,24 @@ class App {
                 <button class="btn btn-secondary btn-sm" id="btn-toggle-labels">🏷️ Toggle Labels</button>
                 <button class="btn btn-secondary btn-sm" id="btn-fit-view">⊙ Fit to Screen</button>
                 <button class="btn btn-secondary btn-sm" id="btn-export-graph">📷 Export PNG Snapshot</button>
+              </div>
+            </div>
+
+            <div class="sidebar-section">
+              <div class="sidebar-heading">
+                <span>Path Tracer</span>
+              </div>
+              <div class="path-tracer-section">
+                <div class="path-trace-info visible" style="display:block;">
+                  Click any node to set it as <strong style="color:#22c55e;">source</strong>, then click another node to set it as <strong style="color:#ef4444;">target</strong>. The tracer ball will follow the shortest path between them.
+                </div>
+                <button class="path-trace-btn stop" id="btn-stop-trace" style="display:none;">Stop Tracing</button>
+                <div class="path-trace-legend">
+                  <span class="legend-item"><span class="legend-swatch active"></span> Next edge</span>
+                  <span class="legend-item"><span class="legend-swatch other"></span> Other connections</span>
+                  <span class="legend-item"><span class="legend-swatch dim"></span> Rest of graph</span>
+                  <span class="legend-item"><span class="legend-swatch ball"></span> Ball</span>
+                </div>
               </div>
             </div>
 
@@ -455,8 +498,8 @@ class App {
 
     const graph = new NetworkGraph(canvasContainer, {
       layout: 'force',
-      enableParticles: true,
-      showLabels: true,
+      enableParticles: false,
+      showLabels: false,
       chargeStrength: -180,
       linkDistance: 80,
       onNodeClick: (node) => {
@@ -518,6 +561,47 @@ class App {
     document.getElementById('btn-toggle-labels').onclick = () => graph.toggleLabels();
     document.getElementById('btn-fit-view').onclick = () => graph.fitToViewport();
     document.getElementById('btn-export-graph').onclick = () => graph.exportImage('global-knowledge-graph.png');
+
+    // --- Instruction Popup ---
+    const instructionPopup = document.getElementById('graph-instruction-popup');
+    const instructionDismiss = document.getElementById('graph-instruction-dismiss');
+    if (instructionPopup && instructionDismiss) {
+      instructionDismiss.addEventListener('click', () => {
+        instructionPopup.classList.add('dismissed');
+      });
+      instructionPopup.addEventListener('click', (e) => {
+        if (e.target === instructionPopup) instructionPopup.classList.add('dismissed');
+      });
+    }
+
+    // --- Path Tracer (click-to-select) ---
+    graph.pathTraceMode = true;
+    graph.pathTraceSource = null;
+    graph.pathTraceTarget = null;
+    graph.pathTraceInfoEl = traceInfo;
+
+    const stopTraceBtn = document.getElementById('btn-stop-trace');
+
+    stopTraceBtn.addEventListener('click', () => {
+      graph.stopPathTrace();
+      graph.pathTraceMode = false;
+      graph.pathTraceSource = null;
+      graph.pathTraceTarget = null;
+      traceInfo.innerHTML = `Click any node to set it as <strong style="color:#22c55e;">source</strong>, then click another node to set it as <strong style="color:#ef4444;">target</strong>. The tracer ball will follow the shortest path between them.`;
+      traceInfo.classList.add('visible');
+      stopTraceBtn.style.display = 'none';
+    });
+
+    graph.options.onPathTraceComplete = (path) => {
+      traceInfo.innerHTML = `<strong style="color:#22c55e;">Path complete!</strong> ${path.length - 1} hops traced.`;
+      traceInfo.classList.add('visible');
+      graph.pathTraceSource = null;
+      graph.pathTraceTarget = null;
+      setTimeout(() => {
+        stopTraceBtn.style.display = 'none';
+        traceInfo.innerHTML = `Click any node to set it as <strong style="color:#22c55e;">source</strong>, then click another node to set it as <strong style="color:#ef4444;">target</strong>. The tracer ball will follow the shortest path between them.`;
+      }, 3000);
+    };
 
     // Topic filtering
     const tagLabels = document.querySelectorAll('.tag-checkbox-label');
