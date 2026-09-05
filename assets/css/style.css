@@ -1127,61 +1127,8 @@ button, input, select, textarea {
 }
 
 /* ==========================================================================
-   Footer & Global Utility
+   Global Utility
    ========================================================================== */
-.site-footer {
-  margin-top: auto;
-  border-top: 1px solid var(--border-subtle);
-  background-color: var(--bg-surface);
-  padding: 3rem 0 2rem;
-  font-size: 0.875rem;
-  color: var(--text-muted);
-}
-
-.footer-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 3rem;
-  margin-bottom: 2.5rem;
-}
-
-.footer-brand-desc {
-  margin-top: 0.75rem;
-  max-width: 320px;
-  line-height: 1.6;
-}
-
-.footer-col-title {
-  font-weight: 700;
-  font-size: 0.825rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-primary);
-  margin-bottom: 1rem;
-}
-
-.footer-links {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.footer-links a {
-  color: var(--text-secondary);
-}
-
-.footer-links a:hover {
-  color: var(--primary);
-}
-
-.footer-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border-subtle);
-}
 
 /* Responsive Media Queries */
 @media (max-width: 900px) {
@@ -1196,11 +1143,6 @@ button, input, select, textarea {
   
   .post-sidebar {
     order: -1;
-  }
-  
-  .footer-grid {
-    grid-template-columns: 1fr;
-    gap: 2rem;
   }
 }
 

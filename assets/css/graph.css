@@ -127,6 +127,46 @@
   opacity: 1;
 }
 
+/* Path trace info overlay (status + tags of the traversed path) */
+.graph-path-info {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 60;
+  pointer-events: none;
+  background: var(--bg-surface-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.95rem;
+  box-shadow: var(--shadow-lg);
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  max-width: min(420px, calc(100% - 32px));
+  line-height: 1.5;
+}
+
+.graph-path-info-row {
+  margin-bottom: 0.4rem;
+}
+
+.graph-path-info-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.graph-path-tag {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #f59e0b;
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
 .tooltip-title {
   font-weight: 700;
   color: var(--text-primary);
@@ -172,10 +212,22 @@
   overflow: hidden;
 }
 
+body.graph-view {
+  overflow: hidden;
+}
+
 .global-graph-main {
   flex: 1;
   position: relative;
   display: flex;
+}
+
+/* Engine canvas: absolute + z-1 so the HUD/legend (z-10) always stay visible */
+.network-graph-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  z-index: 1;
 }
 
 .global-graph-canvas-container {
@@ -286,14 +338,15 @@
   font-weight: 600;
 }
 
-/* Floating HUD Controls on Graph View */
+/* Floating HUD Controls on Graph View — top-left, search + layout side by side */
 .graph-hud-controls {
   position: absolute;
   top: 1.25rem;
   left: 1.25rem;
   z-index: 10;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 0.5rem;
 }
 
@@ -322,6 +375,95 @@
 .hud-search-input::placeholder {
   color: var(--text-muted);
 }
+
+.hud-layout-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  white-space: nowrap;
+  transition: color var(--transition-fast);
+}
+
+.hud-layout-btn:hover {
+  color: var(--text-primary);
+}
+
+/* Graph Legend — bottom-left, pointer-events pass-through */
+.graph-legend {
+  position: absolute;
+  bottom: 1.25rem;
+  left: 1.25rem;
+  z-index: 10;
+  pointer-events: none;
+  background: var(--bg-surface-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 0.7rem 0.85rem;
+  box-shadow: var(--shadow-md);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  min-width: 190px;
+}
+
+.graph-legend-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.35rem;
+}
+
+.graph-legend-section {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0.4rem 0 0.25rem;
+}
+
+.graph-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.15rem 0;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.legend-line {
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  flex: none;
+}
+
+/* Viridis degree scale (d3.interpolateViridis): blue = few connections,
+   yellow = many connections */
+.legend-gradient {
+  width: 42px;
+  height: 10px;
+  border-radius: 3px;
+  flex: none;
+  background: linear-gradient(90deg,
+    #440154, #3b528b, #21918c, #5ec962, #fde725);
+}
+
+.tooltip-connections .deg-in { color: #f472b6; }
+.tooltip-connections .deg-out { color: #38bdf8; }
+.inspector-deg { color: var(--text-muted); opacity: 0.85; }
 
 /* Inspector Drawer for selected node */
 .node-inspector {

@@ -58,6 +58,11 @@ class App {
 
   // --- Router ---
   async handleRoute() {
+    const hash = window.location.hash || '#/';
+
+    // On the knowledge-graph view hide the footer so the graph fills the screen
+    document.body.classList.toggle('graph-view', hash === '#/graph');
+
     // Clear active graphs from previous view
     this.activeGraphInstances.forEach(g => {
       if (g && typeof g.stopPathTrace === 'function') g.stopPathTrace();
@@ -68,7 +73,6 @@ class App {
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'instant' });
 
-    const hash = window.location.hash || '#/';
     this.updateActiveNavLinks(hash);
 
     const appEl = document.getElementById('app');
@@ -358,7 +362,6 @@ class App {
   async renderGlobalGraphView(container) {
     await this.store.loadIndex();
     const globalData = this.store.getGlobalGraphData();
-    const tags = Array.from(this.store.tagsMap.keys());
 
     container.innerHTML = `
       <div class="global-graph-page">
@@ -374,12 +377,12 @@ class App {
             <h3 class="graph-instruction-subtitle">Path Tracer</h3>
             <p class="graph-instruction-text">
               Click any node to set it as <span style="color:#22c55e;font-weight:700;">source</span>, then click another node to set it as <span style="color:#ef4444;font-weight:700;">target</span>.
-              A green ball will follow the shortest path between them, pausing at each character to show its connections.
+              The camera flies along the shortest path between them, revealing one edge at a time and every topic tag it touches.
             </p>
             <div class="graph-instruction-tips">
               <span>🔍 Scroll to zoom</span>
               <span>✋ Drag to pan</span>
-              <span>🖱️ Click + drag nodes to rearrange</span>
+              <span>🖱️ Click two nodes to trace a path</span>
             </div>
             <button class="graph-instruction-btn" id="graph-instruction-dismiss">Got it</button>
           </div>
@@ -391,6 +394,9 @@ class App {
               <div class="hud-pill">
                 <span>🔍</span>
                 <input type="text" class="hud-search-input" id="graph-node-search" placeholder="Search nodes...">
+              </div>
+              <div class="hud-pill">
+                <button class="hud-layout-btn" id="graph-layout-btn" title="Switch layout">Layout: Force</button>
               </div>
             </div>
 
@@ -404,82 +410,16 @@ class App {
               <ul class="node-inspector-links" id="inspector-links"></ul>
               <a href="#" class="btn btn-primary btn-sm node-inspector-btn" id="inspector-btn">Read Article →</a>
             </div>
-          </div>
 
-          <div class="global-graph-sidebar">
-            <div class="sidebar-section">
-              <div class="sidebar-heading">
-                <span>Network Controls</span>
+            <div class="graph-legend" id="graph-legend">
+              <div class="graph-legend-title">Legend</div>
+              <div class="graph-legend-row graph-legend-scale">
+                <span class="legend-gradient" id="legend-gradient"></span>
+                <span id="legend-color-desc">Node color = connections</span>
               </div>
-              <div class="control-group">
-                <label class="control-label">
-                  <span>Layout Mode</span>
-                </label>
-                <select class="control-select" id="graph-layout-select">
-                  <option value="force">Force-Directed Physics</option>
-                  <option value="circle-alpha">Circle by A-Z</option>
-                  <option value="circle-degree">Circle by Degree</option>
-                  <option value="random">Random</option>
-                </select>
-              </div>
-              <div class="control-group">
-                <label class="control-label">
-                  <span>Charge Repulsion</span>
-                  <span id="charge-val">-180</span>
-                </label>
-                <input type="range" class="control-slider" id="slider-charge" min="-400" max="-50" value="-180">
-              </div>
-              <div class="control-group">
-                <label class="control-label">
-                  <span>Link Distance</span>
-                  <span id="distance-val">80</span>
-                </label>
-                <input type="range" class="control-slider" id="slider-distance" min="30" max="200" value="80">
-              </div>
-            </div>
-
-            <div class="sidebar-section">
-              <div class="sidebar-heading">
-                <span>Visual Toggles</span>
-              </div>
-              <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-                <button class="btn btn-secondary btn-sm" id="btn-toggle-particles">✨ Toggle Flow Particles</button>
-                <button class="btn btn-secondary btn-sm" id="btn-toggle-labels">🏷️ Toggle Labels</button>
-                <button class="btn btn-secondary btn-sm" id="btn-fit-view">⊙ Fit to Screen</button>
-                <button class="btn btn-secondary btn-sm" id="btn-export-graph">📷 Export PNG Snapshot</button>
-              </div>
-            </div>
-
-            <div class="sidebar-section">
-              <div class="sidebar-heading">
-                <span>Path Tracer</span>
-              </div>
-              <div class="path-tracer-section">
-                <div class="path-trace-info visible" style="display:block;">
-                  Click any node to set it as <strong style="color:#22c55e;">source</strong>, then click another node to set it as <strong style="color:#ef4444;">target</strong>. The tracer ball will follow the shortest path between them.
-                </div>
-                <button class="path-trace-btn stop" id="btn-stop-trace" style="display:none;">Stop Tracing</button>
-                <div class="path-trace-legend">
-                  <span class="legend-item"><span class="legend-swatch active"></span> Next edge</span>
-                  <span class="legend-item"><span class="legend-swatch other"></span> Other connections</span>
-                  <span class="legend-item"><span class="legend-swatch dim"></span> Rest of graph</span>
-                  <span class="legend-item"><span class="legend-swatch ball"></span> Ball</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="sidebar-section">
-              <div class="sidebar-heading">
-                <span>Filter by Topic</span>
-              </div>
-              <div class="filter-tags-grid">
-                ${tags.map(tag => `
-                  <label class="tag-checkbox-label checked" data-tag="${tag}">
-                    <input type="checkbox" checked value="${tag}">
-                    <span>#${tag}</span>
-                  </label>
-                `).join('')}
-              </div>
+              <div class="graph-legend-row"><span class="legend-line" style="background:#38bdf8"></span>Out link →</div>
+              <div class="graph-legend-row"><span class="legend-line" style="background:#f472b6"></span>In link ←</div>
+              <div class="graph-legend-row"><span class="legend-line" style="background:#22c55e"></span>Revealed path</div>
             </div>
           </div>
         </div>
@@ -500,8 +440,8 @@ class App {
       layout: 'force',
       enableParticles: false,
       showLabels: false,
-      chargeStrength: -180,
-      linkDistance: 80,
+      chargeStrength: -400,
+      linkDistance: 200,
       onNodeClick: (node) => {
         inspectorEl.classList.add('active');
         inspectorTitle.innerText = node.label || node.id;
@@ -511,6 +451,10 @@ class App {
         const connected = globalData.links.filter(l => 
           (l.source.id || l.source) === node.id || (l.target.id || l.target) === node.id
         );
+        const inCount = globalData.links.filter(l => (l.target.id || l.target) === node.id).length;
+        const outCount = globalData.links.filter(l => (l.source.id || l.source) === node.id).length;
+        inspectorDesc.innerHTML = (node.description || (node.type === 'post' ? 'Blog Article' : 'Knowledge Concept')) +
+          ` <span class="inspector-deg">· ↓ ${inCount} in · ↑ ${outCount} out</span>`;
 
         inspectorLinks.innerHTML = connected.map(l => {
           const isSource = (l.source.id || l.source) === node.id;
@@ -530,37 +474,23 @@ class App {
     });
 
     graph.setData(globalData);
+
+    // Legend: node colors are a viridis degree scale — blue = few connections,
+    // yellow = many. Show the real min/max for this dataset.
+    (() => {
+      const counts = globalData.nodes.map(n => globalData.links.filter(l =>
+        (l.source.id || l.source) === n.id || (l.target.id || l.target) === n.id
+      ).length);
+      if (!counts.length) return;
+      const minC = Math.min(...counts);
+      const maxC = Math.max(...counts);
+      const legendDesc = document.getElementById('legend-color-desc');
+      if (legendDesc) {
+        legendDesc.textContent = `Node color = connections (${minC}–${maxC})`;
+        legendDesc.title = `Blue ≈ ${minC} connection(s) → Yellow ≈ ${maxC}`;
+      }
+    })();
     this.activeGraphInstances.push(graph);
-
-    // Sidebar controls integration
-    const layoutSelect = document.getElementById('graph-layout-select');
-    layoutSelect.onchange = (e) => graph.applyLayout(e.target.value);
-
-    const sliderCharge = document.getElementById('slider-charge');
-    sliderCharge.oninput = (e) => {
-      const val = Number(e.target.value);
-      document.getElementById('charge-val').innerText = val;
-      graph.options.chargeStrength = val;
-      if (graph.simulation) {
-        graph.simulation.force('charge', d3.forceManyBody().strength(val)).alpha(0.3).restart();
-      }
-    };
-
-    const sliderDistance = document.getElementById('slider-distance');
-    sliderDistance.oninput = (e) => {
-      const val = Number(e.target.value);
-      document.getElementById('distance-val').innerText = val;
-      graph.options.linkDistance = val;
-      if (graph.simulation) {
-        graph.simulation.force('link').distance(val);
-        graph.simulation.alpha(0.3).restart();
-      }
-    };
-
-    document.getElementById('btn-toggle-particles').onclick = () => graph.toggleParticles();
-    document.getElementById('btn-toggle-labels').onclick = () => graph.toggleLabels();
-    document.getElementById('btn-fit-view').onclick = () => graph.fitToViewport();
-    document.getElementById('btn-export-graph').onclick = () => graph.exportImage('global-knowledge-graph.png');
 
     // --- Instruction Popup ---
     const instructionPopup = document.getElementById('graph-instruction-popup');
@@ -578,59 +508,19 @@ class App {
     graph.pathTraceMode = true;
     graph.pathTraceSource = null;
     graph.pathTraceTarget = null;
-    graph.pathTraceInfoEl = traceInfo;
-
-    const stopTraceBtn = document.getElementById('btn-stop-trace');
-
-    stopTraceBtn.addEventListener('click', () => {
-      graph.stopPathTrace();
-      graph.pathTraceMode = false;
-      graph.pathTraceSource = null;
-      graph.pathTraceTarget = null;
-      traceInfo.innerHTML = `Click any node to set it as <strong style="color:#22c55e;">source</strong>, then click another node to set it as <strong style="color:#ef4444;">target</strong>. The tracer ball will follow the shortest path between them.`;
-      traceInfo.classList.add('visible');
-      stopTraceBtn.style.display = 'none';
-    });
 
     graph.options.onPathTraceComplete = (path) => {
-      traceInfo.innerHTML = `<strong style="color:#22c55e;">Path complete!</strong> ${path.length - 1} hops traced.`;
-      traceInfo.classList.add('visible');
       graph.pathTraceSource = null;
       graph.pathTraceTarget = null;
-      setTimeout(() => {
-        stopTraceBtn.style.display = 'none';
-        traceInfo.innerHTML = `Click any node to set it as <strong style="color:#22c55e;">source</strong>, then click another node to set it as <strong style="color:#ef4444;">target</strong>. The tracer ball will follow the shortest path between them.`;
-      }, 3000);
     };
 
-    // Topic filtering
-    const tagLabels = document.querySelectorAll('.tag-checkbox-label');
-    tagLabels.forEach(lbl => {
-      lbl.onclick = (e) => {
-        if (e.target.tagName !== 'INPUT') {
-          const input = lbl.querySelector('input');
-          input.checked = !input.checked;
-        }
-        lbl.classList.toggle('checked', lbl.querySelector('input').checked);
-
-        const activeTags = new Set(
-          Array.from(document.querySelectorAll('.tag-checkbox-label input:checked')).map(i => i.value)
-        );
-
-        // Filter nodes & links
-        const filteredNodes = globalData.nodes.filter(n => {
-          if (n.type === 'tag') return activeTags.has(n.label.replace('#', ''));
-          if (n.type === 'post') return n.tags.some(t => activeTags.has(t));
-          return true;
-        });
-        const filteredNodeIds = new Set(filteredNodes.map(n => n.id));
-        const filteredLinks = globalData.links.filter(l => 
-          filteredNodeIds.has(l.source.id || l.source) && filteredNodeIds.has(l.target.id || l.target)
-        );
-
-        graph.setData({ nodes: filteredNodes, links: filteredLinks });
-      };
-    });
+    // Layout switcher: force <-> circle (A-Z)
+    const layoutBtn = document.getElementById('graph-layout-btn');
+    layoutBtn.onclick = () => {
+      const next = graph.options.layout === 'force' ? 'circle-az' : 'force';
+      graph.setLayout(next);
+      layoutBtn.textContent = next === 'force' ? 'Layout: Force' : 'Layout: Circle A–Z';
+    };
 
     // Node search highlight
     const searchInput = document.getElementById('graph-node-search');
