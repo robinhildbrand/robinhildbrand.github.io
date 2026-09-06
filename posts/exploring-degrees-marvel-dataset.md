@@ -1,7 +1,7 @@
 ---
 title: "Exploring Degrees in the Marvel Dataset"
 date: "2026-09-04"
-author: "Robin Hildbrand"
+author: "Robin, Giosué, Sébastien"
 readTime: "8 min read"
 tags: ["marvel", "network-analysis", "degree-distribution", "complex-networks"]
 summary: "An empirical analysis of node degrees, in/out-degree asymmetries, power-law distributions, and central superhero hubs across the Wikipedia Marvel Comics network."
@@ -210,7 +210,7 @@ Fraction of Nodes P(k)
 
 ## 5. Python Analysis Code
 
-Here is a concise Python implementation demonstrating how to load the dataset, compute node degrees, and calculate the network metrics described above:
+Here is a concise Python implementation demonstrating how to load the dataset with its isolates, compute node degrees, and calculate the network metrics described above:
 
 ```python
 import pandas as pd
@@ -251,4 +251,4 @@ print(f"\nReciprocity: {reciprocity:.2%}")
 2. **Asymmetric Roles**: In-degree identifies cultural recognition and canonical prestige, whereas out-degree reflects editorial narrative breadth and multi-team franchise connections.
 3. **Scale-Free Structural Resilience**: The extreme degree heterogeneity shows that the Marvel network is robust to random node removal, but fragile to the targeted removal of its top hubs.
 
-In future analyses, we will build upon these degree fundamentals to explore **community structure (Louvain modularity)**, **betweenness centrality**, and the **eigenvector spectrum** of the Marvel graph!
+In future analyses, we will build upon these degree fundamentals to explore **models and null models** of the Marvel graph!
