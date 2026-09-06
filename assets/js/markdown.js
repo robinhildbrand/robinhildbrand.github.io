@@ -207,7 +207,7 @@ class MarkdownProcessor {
     if (typeof DOMPurify !== 'undefined') {
       html = DOMPurify.sanitize(html, {
         ADD_TAGS: ['iframe'],
-        ADD_ATTR: ['target', 'allowfullscreen', 'frameborder', 'onclick', 'data-post-slug', 'data-action']
+        ADD_ATTR: ['src', 'width', 'height', 'style', 'title', 'class', 'loading', 'allow', 'target', 'allowfullscreen', 'frameborder', 'onclick', 'data-post-slug', 'data-action']
       });
     }
 
