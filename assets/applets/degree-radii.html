@@ -830,8 +830,8 @@
       currentScope = 'spidey';
       document.querySelectorAll('.toolbar-group .btn-pill').forEach(b => b.classList.remove('active'));
       this.classList.add('active');
-      selectNode('Spider-Man');
       updateSimulation();
+      selectNode('Spider-Man');
     };
 
     document.getElementById('btn-focus-hubs').onclick = function() {
@@ -898,8 +898,8 @@
     } catch (e) {}
 
     // Init
-    selectNode('Spider-Man');
     updateSimulation();
+    selectNode('Spider-Man');
   </script>
 </body>
 </html>
