@@ -4,7 +4,7 @@ date: "2026-09-04"
 author: "Robin, Giosué, Sébastien"
 readTime: "4 min read"
 tags: ["marvel", "network-analysis", "degree-distribution", "complex-networks"]
-summary: "An empirical analysis of node degrees, in/out-degree asymmetries, power-law distributions, and central superhero hubs across the Wikipedia Marvel Comics network."
+summary: "An empirical analysis of node degrees, in/out-degree asymmetries, heavy-tailed degree distributions, and central superhero hubs across the Wikipedia Marvel Comics network."
 wikilinks: ["network-models-marvel-comparison"]
 ---
 
@@ -179,11 +179,15 @@ One giant node, surrounded by tiny ones. That is the **shape** of the whole data
 - The **top 3 heroes alone** hold **230 incoming links** — about 13% of the entire network's connections.
 - The **top 10** hold over a quarter of everything.
 
-This is called a **heavy-tailed, scale-free distribution**, and it follows a simple power law:
+This shape is the signature of a **heavy-tailed distribution**: a few mega-hubs plus a long tail of minor heroes. Degrees decay far more slowly than they would in a network where links are spread at random.
+
+Heavy tails are often *modelled* by a power law,
 
 $$P(k) \propto k^{-\gamma}, \quad 2 < \gamma < 3$$
 
-Real networks get this way through **preferential attachment**: writers naturally link new characters to the famous ones. The rich get richer — Spider-Man gets mentioned *because* he's already been mentioned. Random networks (the *Erdős–Rényi* model) cannot produce hubs this extreme; the chance of a node with 106 links in a purely random version of this network is less than 1 in 10⁶⁰.
+which is the defining feature of **scale-free** networks. But scale-freeness is a strong claim — the *entire* distribution would have to obey a single power law, something that can only be established with rigorous statistical testing and far more than 303 nodes. What Marvel's data unambiguously show is a **heavy tail**: the top heroes are connected far more than pure chance allows. We will keep this distinction in mind throughout the series.
+
+Real networks develop heavy tails through **preferential attachment**: writers naturally link new characters to the famous ones. The rich get richer — Spider-Man gets mentioned *because* he's already been mentioned. Random networks (the *Erdős–Rényi* model) cannot produce hubs this extreme; the chance of a node with 106 links in a purely random version of this network is less than 1 in 10⁶⁰.
 
 ---
 
@@ -197,6 +201,6 @@ No code needed here — the pipeline was: load the node/edge spreadsheet (`week1
 
 1. **Popularity is extremely concentrated.** Spider-Man, Hulk, and Wolverine dominate — most heroes are barely connected.
 2. **Who writes matters as much as who is written about.** In-degree reveals icons; out-degree reveals the cross-franchise glue characters.
-3. **Marvel is a scale-free network.** Robust to random failures, fragile to the loss of its top hubs.
+3. **Marvel's degree distribution is heavy-tailed.** Not provably *scale-free* in the strict power-law sense — but the tail is unmistakably far heavier than a random network's. That makes the network robust to random failures yet fragile to the loss of its top hubs.
 
 Next up: we take these degree insights and dig into **community structure**, **centrality**, and the **spectral** properties of the Marvel graph.

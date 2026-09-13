@@ -9,7 +9,7 @@
       "marvel",
       "network-models",
       "small-world",
-      "scale-free",
+      "heavy-tail",
       "complex-networks"
     ],
     "summary": "We compare the Marvel character network edge-by-edge with an Erdős–Rényi random graph, a Watts–Strogatz small-world network, and a Barabási–Albert scale-free network built with identical node and edge counts.",
@@ -22,7 +22,7 @@
     "slug": "exploring-degrees-marvel-dataset",
     "title": "Exploring Degrees in the Marvel Dataset",
     "date": "2026-09-04",
-"author": "Robin, Giosué, Sébastien",
+    "author": "Robin, Giosué, Sébastien",
     "readTime": "4 min read",
     "tags": [
       "marvel",
@@ -30,7 +30,7 @@
       "degree-distribution",
       "complex-networks"
     ],
-    "summary": "An empirical analysis of node degrees, in/out-degree asymmetries, power-law distributions, and central superhero hubs across the Wikipedia Marvel Comics network.",
+    "summary": "An empirical analysis of node degrees, in/out-degree asymmetries, heavy-tailed degree distributions, and central superhero hubs across the Wikipedia Marvel Comics network.",
     "wikilinks": [
       "network-models-marvel-comparison"
     ],

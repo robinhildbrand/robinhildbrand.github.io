@@ -3,7 +3,7 @@ title: "Marvel vs. Random, Small-World and Scale-Free Networks"
 date: "2026-09-11"
 author: "Robin, Giosué, Sébastien"
 readTime: "7 min read"
-tags: ["marvel", "network-models", "small-world", "scale-free", "complex-networks"]
+tags: ["marvel", "network-models", "small-world", "heavy-tail", "complex-networks"]
 summary: "We compare the Marvel character network edge-by-edge with an Erdős–Rényi random graph, a Watts–Strogatz small-world network, and a Barabási–Albert scale-free network built with identical node and edge counts."
 wikilinks: ["exploring-degrees-marvel-dataset"]
 ---
@@ -42,7 +42,7 @@ Start from a **ring** where each node attaches to its 10 nearest neighbours ($k 
 
 ### 3. Barabási–Albert scale-free, $\text{BA}(303, m{=}5)$
 
-Grow the graph node by node; each newcomer attaches to $m = 5$ existing nodes chosen **proportionally to their current degree** (rich-get-richer). This produces hubs and a degree distribution that follows a power law, $P(k) \propto k^{-\gamma}$ with $\gamma \approx 3$. The raw output has $5 \cdot (303-5) = 1490$ edges, so we remove a few random edges to match $M = 1434$.
+Grow the graph node by node; each newcomer attaches to $m = 5$ existing nodes chosen **proportionally to their current degree** (rich-get-richer). This produces hubs and a degree distribution whose tail decays as a power law, $P(k) \propto k^{-\gamma}$ with $\gamma \approx 3$ (in the infinite-size limit) — the canonical *scale-free* model. The raw output has $5 \cdot (303-5) = 1490$ edges, so we remove a few random edges to match $M = 1434$.
 
 ---
 
@@ -77,9 +77,9 @@ The story is sharp:
 
 - **Marvel is not a single giant component.** Uniquely among the four, Marvel **fragments into 19 components** — the two real "islands" (277 and 9 nodes) from last week plus 17 isolates. Random graphs, Watts–Strogatz rings and even BA networks stay connected at this density. This is a genuine *modelling failure*: real networks can have disconnected, thematically isolated clusters.
 
-- **The degree distribution is scale-free, not Poisson.** On the log–log plot the Marvel distribution tails off like a power law — the signature of a Barabási–Albert network — while the Erdős–Rényi distribution collapses like a narrow Poisson bell around $\langle k \rangle$.
+- **The degree distribution is heavy-tailed, not Poisson.** On the log–log plot the Marvel tail declines slowly and reaches far out (up to $k = 106$) — qualitatively like the Barabási–Albert model — while the Erdős–Rényi distribution collapses like a narrow Poisson bell around $\langle k \rangle$. We deliberately say *heavy-tailed* rather than *scale-free*: a power law is only one particular kind of heavy tail, and proving a strict power law from 303 nodes would require far more data.
 
-In short: **Marvel is a small-world, scale-free network with a random-graph-like distance backbone** — but with disconnected islands that no classical null model produces.
+In short: **Marvel is a small-world network with heavy-tailed, hub-dominated degrees and random-graph-like distances** — but with disconnected islands that no classical null model produces.
 
 ---
 
@@ -156,8 +156,4 @@ Classical null models assume a **single generative rule**. The Marvel universe v
 2. **Theme silos** — X-Men characters cluster with X-Men characters, the Avengers with the Avengers. This community structure elevates clustering far above random expectations (and occasionally produces entirely disconnected islands).
 3. **One dominant protagonist** — Spider-Man is codified in *hundreds* of articles through "appearances in" typologies, a mechanism closer to preferential attachment than to uniform randomness.
 
-Because Marvel combines the **short paths of a random graph**, the **clustering of a small-world ring**, and the **heavy tails of a scale-free network**, no single one of the classical models wins — *the real network borrows the best of all three*.
-
----
-
-Next week we will turn to **spectral properties** — eigenvalues of the adjacency and Laplacian matrices — which will let us separate communities and quantify exactly *how far* Marvel sits from each null model.
+Because Marvel combines the **short paths of a random graph**, the **clustering of a small-world ring**, and the **heavy-tailed, hub-dominated degrees** that scale-free models were designed to explain, no single one of the classical models wins — *the real network borrows the best of all three*.
