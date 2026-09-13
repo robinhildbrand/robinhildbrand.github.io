@@ -328,6 +328,17 @@ class PostsStore {
   getFallbackIndex() {
     return [
       {
+        slug: 'network-models-marvel-comparison',
+        title: 'Marvel vs. Random, Small-World and Scale-Free Networks',
+        date: '2026-09-11',
+        author: 'Robin Hildbrand',
+        readTime: '7 min read',
+        tags: ['marvel', 'network-models', 'small-world', 'scale-free', 'complex-networks'],
+        summary: 'We compare the Marvel character network edge-by-edge with an Erdős–Rényi random graph, a Watts–Strogatz small-world network, and a Barabási–Albert scale-free network built with identical node and edge counts.',
+        wikilinks: ['exploring-degrees-marvel-dataset'],
+        file: 'posts/network-models-marvel-comparison.md'
+      },
+      {
         slug: 'exploring-degrees-marvel-dataset',
         title: 'Exploring Degrees in the Marvel Dataset',
         date: '2026-09-04',
@@ -335,7 +346,7 @@ class PostsStore {
         readTime: '8 min read',
         tags: ['marvel', 'network-analysis', 'degree-distribution', 'complex-networks'],
         summary: 'An empirical analysis of node degrees, in/out-degree asymmetries, power-law distributions, and central superhero hubs across the Wikipedia Marvel Comics network.',
-        wikilinks: [],
+        wikilinks: ['network-models-marvel-comparison'],
         file: 'posts/exploring-degrees-marvel-dataset.md'
       }
     ];

@@ -4,8 +4,8 @@ date: "2026-09-04"
 author: "Robin, Giosué, Sébastien"
 readTime: "4 min read"
 tags: ["marvel", "network-analysis", "degree-distribution", "complex-networks"]
-summary: "What happens when you count every Wikipedia link between 303 Marvel superheroes? A few heroes become giant hubs while most stay minor — a clean, visual case study of scale-free networks."
-wikilinks: []
+summary: "An empirical analysis of node degrees, in/out-degree asymmetries, power-law distributions, and central superhero hubs across the Wikipedia Marvel Comics network."
+wikilinks: ["network-models-marvel-comparison"]
 ---
 
 Every character in the Marvel Universe is connected to every other character through stories, teams, and cameos. In Wikipedia, those connections are concrete: **hyperlink citations**. If two pages link to each other, the characters are connected.
