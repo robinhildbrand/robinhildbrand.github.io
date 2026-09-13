@@ -20,9 +20,20 @@
       "gc_size": 277,
       "gc_frac": 0.9142,
       "max_degree": 106,
-      "assortativity": -0.0977,
+      "assortativity": -0.0966,
       "label": "Marvel universe",
-      "color": "#ef4444"
+      "color": "#ef4444",
+      "giant": {
+        "N": 277,
+        "M": 1421,
+        "clustering": 0.3199,
+        "avg_path": 2.674,
+        "diameter": 6,
+        "components": 1,
+        "gc_size": 277,
+        "gc_frac": 1.0,
+        "max_degree": 106
+      }
     },
     {
       "id": "g_nm",
@@ -36,9 +47,20 @@
       "gc_size": 303,
       "gc_frac": 1.0,
       "max_degree": 21,
-      "assortativity": -0.021,
+      "assortativity": -0.0164,
       "label": "Erdős–Rényi G(N, M)",
-      "color": "#38bdf8"
+      "color": "#38bdf8",
+      "giant": {
+        "N": 303,
+        "M": 1434,
+        "clustering": 0.03,
+        "avg_path": 2.771,
+        "diameter": 5,
+        "components": 1,
+        "gc_size": 303,
+        "gc_frac": 1.0,
+        "max_degree": 21
+      }
     },
     {
       "id": "watts_strogatz",
@@ -52,9 +74,20 @@
       "gc_size": 303,
       "gc_frac": 1.0,
       "max_degree": 16,
-      "assortativity": -0.024,
+      "assortativity": -0.0207,
       "label": "Watts–Strogatz",
-      "color": "#34d399"
+      "color": "#34d399",
+      "giant": {
+        "N": 303,
+        "M": 1434,
+        "clustering": 0.3425,
+        "avg_path": 3.206,
+        "diameter": 5,
+        "components": 1,
+        "gc_size": 303,
+        "gc_frac": 1.0,
+        "max_degree": 16
+      }
     },
     {
       "id": "barabasi_albert",
@@ -68,9 +101,47 @@
       "gc_size": 303,
       "gc_frac": 1.0,
       "max_degree": 76,
-      "assortativity": -0.1225,
+      "assortativity": 0.2004,
       "label": "Barabási–Albert",
-      "color": "#fbbf24"
+      "color": "#fbbf24",
+      "giant": {
+        "N": 303,
+        "M": 1434,
+        "clustering": 0.1064,
+        "avg_path": 2.598,
+        "diameter": 4,
+        "components": 1,
+        "gc_size": 303,
+        "gc_frac": 1.0,
+        "max_degree": 76
+      }
+    },
+    {
+      "id": "degree_preserved",
+      "N": 303,
+      "M": 1434,
+      "avg_degree": 9.465,
+      "clustering": 0.1751,
+      "avg_path": 2.59,
+      "diameter": 5,
+      "components": 19,
+      "gc_size": 277,
+      "gc_frac": 0.9142,
+      "max_degree": 106,
+      "assortativity": -0.1227,
+      "label": "Degree-preserved swap",
+      "color": "#c084fc",
+      "giant": {
+        "N": 277,
+        "M": 1421,
+        "clustering": 0.1752,
+        "avg_path": 2.59,
+        "diameter": 5,
+        "components": 1,
+        "gc_size": 277,
+        "gc_frac": 1.0,
+        "max_degree": 106
+      }
     }
   ],
   "distributions": {
@@ -558,6 +629,193 @@
       },
       {
         "k": 76,
+        "count": 1,
+        "p": 0.0033
+      }
+    ],
+    "degree_preserved": [
+      {
+        "k": 0,
+        "count": 17,
+        "p": 0.056106
+      },
+      {
+        "k": 1,
+        "count": 18,
+        "p": 0.059406
+      },
+      {
+        "k": 2,
+        "count": 26,
+        "p": 0.085809
+      },
+      {
+        "k": 3,
+        "count": 31,
+        "p": 0.10231
+      },
+      {
+        "k": 4,
+        "count": 25,
+        "p": 0.082508
+      },
+      {
+        "k": 5,
+        "count": 21,
+        "p": 0.069307
+      },
+      {
+        "k": 6,
+        "count": 22,
+        "p": 0.072607
+      },
+      {
+        "k": 7,
+        "count": 18,
+        "p": 0.059406
+      },
+      {
+        "k": 8,
+        "count": 14,
+        "p": 0.046205
+      },
+      {
+        "k": 9,
+        "count": 12,
+        "p": 0.039604
+      },
+      {
+        "k": 10,
+        "count": 8,
+        "p": 0.026403
+      },
+      {
+        "k": 11,
+        "count": 8,
+        "p": 0.026403
+      },
+      {
+        "k": 12,
+        "count": 5,
+        "p": 0.016502
+      },
+      {
+        "k": 13,
+        "count": 5,
+        "p": 0.016502
+      },
+      {
+        "k": 14,
+        "count": 4,
+        "p": 0.013201
+      },
+      {
+        "k": 15,
+        "count": 12,
+        "p": 0.039604
+      },
+      {
+        "k": 16,
+        "count": 5,
+        "p": 0.016502
+      },
+      {
+        "k": 17,
+        "count": 7,
+        "p": 0.023102
+      },
+      {
+        "k": 18,
+        "count": 7,
+        "p": 0.023102
+      },
+      {
+        "k": 19,
+        "count": 1,
+        "p": 0.0033
+      },
+      {
+        "k": 20,
+        "count": 2,
+        "p": 0.006601
+      },
+      {
+        "k": 21,
+        "count": 4,
+        "p": 0.013201
+      },
+      {
+        "k": 22,
+        "count": 4,
+        "p": 0.013201
+      },
+      {
+        "k": 24,
+        "count": 4,
+        "p": 0.013201
+      },
+      {
+        "k": 25,
+        "count": 2,
+        "p": 0.006601
+      },
+      {
+        "k": 26,
+        "count": 3,
+        "p": 0.009901
+      },
+      {
+        "k": 27,
+        "count": 4,
+        "p": 0.013201
+      },
+      {
+        "k": 28,
+        "count": 4,
+        "p": 0.013201
+      },
+      {
+        "k": 29,
+        "count": 1,
+        "p": 0.0033
+      },
+      {
+        "k": 31,
+        "count": 1,
+        "p": 0.0033
+      },
+      {
+        "k": 32,
+        "count": 2,
+        "p": 0.006601
+      },
+      {
+        "k": 37,
+        "count": 1,
+        "p": 0.0033
+      },
+      {
+        "k": 41,
+        "count": 1,
+        "p": 0.0033
+      },
+      {
+        "k": 57,
+        "count": 1,
+        "p": 0.0033
+      },
+      {
+        "k": 63,
+        "count": 1,
+        "p": 0.0033
+      },
+      {
+        "k": 65,
+        "count": 1,
+        "p": 0.0033
+      },
+      {
+        "k": 106,
         "count": 1,
         "p": 0.0033
       }

@@ -1,4 +1,4 @@
-"""Generate applet 3: Marvel network vs random / Watts-Strogatz / Barabasi-Albert.
+"""Generate applet 3: Marvel network vs classical and degree-preserved null models.
 
 Produces:
   - assets/model_comparison.json      (all computed data for the article)
@@ -40,7 +40,7 @@ def load_marvel():
 
     G = nx.Graph()
     G.add_nodes_from(nodes)
-    G.add_edges_from(edges)
+    G.add_edges_from(sorted(edges))
     return G
 
 
@@ -52,6 +52,20 @@ def degree_distribution(G):
     total = G.number_of_nodes()
     return [{"k": k, "count": counts[k], "p": round(counts[k] / total, 6)}
             for k in sorted(counts)]
+
+
+def degree_assortativity(G):
+    """Return degree assortativity without NetworkX's optional numpy path."""
+    pairs = [(G.degree[u], G.degree[v]) for u, v in G.edges()]
+    if not pairs:
+      return 0.0
+    mean_x = sum(x for x, _ in pairs) / len(pairs)
+    mean_y = sum(y for _, y in pairs) / len(pairs)
+    covariance = sum((x - mean_x) * (y - mean_y) for x, y in pairs) / len(pairs)
+    variance_x = sum((x - mean_x) ** 2 for x, _ in pairs) / len(pairs)
+    variance_y = sum((y - mean_y) ** 2 for _, y in pairs) / len(pairs)
+    denominator = math.sqrt(variance_x * variance_y)
+    return covariance / denominator if denominator else 0.0
 
 
 def summarize(G, name):
@@ -70,7 +84,23 @@ def summarize(G, name):
         "gc_size": len(ccs[0]),
         "gc_frac": round(len(ccs[0]) / G.number_of_nodes(), 4),
         "max_degree": max(degrees),
-        "assortativity": round(nx.degree_assortativity_coefficient(G), 4),
+        "assortativity": round(degree_assortativity(G), 4),
+    }
+
+
+def giant_summary(G):
+    """Return metrics for the largest connected component."""
+    giant = G.subgraph(max(nx.connected_components(G), key=len))
+    return {
+        "N": giant.number_of_nodes(),
+        "M": giant.number_of_edges(),
+        "clustering": round(nx.average_clustering(giant), 4),
+        "avg_path": round(nx.average_shortest_path_length(giant), 3),
+        "diameter": nx.diameter(giant),
+        "components": 1,
+        "gc_size": giant.number_of_nodes(),
+        "gc_frac": 1.0,
+        "max_degree": max(dict(giant.degree()).values()),
     }
 
 
@@ -97,11 +127,35 @@ def build_networks():
     drop_ba = G_ba.number_of_edges() - M
     G_ba.remove_edges_from(random.sample(list(G_ba.edges()), drop_ba))
 
+    # Degree-preserved null: scramble endpoints while retaining every degree.
+    G_config = G_marvel.copy()
+    swap_rng = random.Random(SEED)
+    components = sorted(nx.connected_components(G_marvel), key=lambda nodes: min(nodes))
+    giant_nodes = max(components, key=len)
+    for component in components:
+      if len(component) != len(giant_nodes):
+        continue
+      component_graph = nx.Graph()
+      component_graph.add_nodes_from(sorted(component))
+      component_graph.add_edges_from(sorted(G_config.subgraph(component).edges()))
+      component_edges = component_graph.number_of_edges()
+      if component_edges < 2:
+        continue
+      nx.double_edge_swap(
+        component_graph,
+        nswap=10 * component_edges,
+        max_tries=100 * component_edges,
+            seed=swap_rng,
+      )
+      G_config.remove_edges_from(list(G_config.subgraph(component).edges()))
+      G_config.add_edges_from(component_graph.edges())
+
     networks = {
         "marvel": G_marvel,
         "g_nm": G_er,
         "watts_strogatz": G_ws,
         "barabasi_albert": G_ba,
+        "degree_preserved": G_config,
     }
     return networks, N, M, {"ws_k": WS_K, "ws_p": WS_P, "ba_m": BA_M}
 
@@ -114,12 +168,14 @@ def main():
         "g_nm": "Erdős–Rényi G(N, M)",
         "watts_strogatz": "Watts–Strogatz",
         "barabasi_albert": "Barabási–Albert",
+        "degree_preserved": "Degree-preserved swap",
     }
     colors = {
         "marvel": "#ef4444",
         "g_nm": "#38bdf8",
         "watts_strogatz": "#34d399",
         "barabasi_albert": "#fbbf24",
+        "degree_preserved": "#c084fc",
     }
 
     summary = []
@@ -129,7 +185,9 @@ def main():
         stats["label"] = labels[key]
         stats["color"] = colors[key]
         stats["dist"] = degree_distribution(G)
-        summary.append({k: v for k, v in stats.items() if k != "dist"})
+        stats["giant"] = giant_summary(G)
+        summary.append({k: v for k, v in stats.items() if k not in ("dist", "giant")})
+        summary[-1]["giant"] = stats["giant"]
         distributions[key] = stats["dist"]
 
     out = {
@@ -243,6 +301,7 @@ def render_html(data):
     .seg-btn.active.g_nm {{ background: var(--er); }}
     .seg-btn.active.watts_strogatz {{ background: var(--ws); }}
     .seg-btn.active.barabasi_albert {{ background: var(--ba); }}
+    .seg-btn.active.degree_preserved {{ background: #c084fc; }}
     .net-dot {{ display: inline-block; width: 9px; height: 9px; border-radius: 50%; }}
     .main-area {{ flex: 1; position: relative; overflow: hidden; }}
     .chart-container {{ width: 100%; height: 100%; position: relative; }}
@@ -270,8 +329,8 @@ def render_html(data):
     .bar-axis text {{ fill: var(--text-muted); font-size: 11px; }}
     .table-wrap {{
       position: absolute; bottom: 14px; left: 14px; right: 14px;
-      background: var(--bg-panel); border: 1px solid var(--border);
-      border-radius: 10px; overflow: hidden; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      max-height: 46%; background: var(--bg-panel); border: 1px solid var(--border);
+      border-radius: 10px; overflow: auto; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     }}
     table.compare-table {{ width: 100%; border-collapse: collapse; font-size: 0.72rem; }}
     .compare-table th, .compare-table td {{ padding: 6px 8px; text-align: right; white-space: nowrap; }}
@@ -281,6 +340,21 @@ def render_html(data):
     .compare-table tbody tr:last-child {{ border-bottom: none; }}
     .metric-key {{ color: var(--text-muted); font-size: 0.7rem; margin-bottom: 2px; }}
     .metric-num {{ font-family: var(--font-mono); font-weight: 700; font-size: 1.05rem; }}
+    .swap-panel {{ position: absolute; inset: 0; z-index: 15; padding: 18px; height: 100%; overflow: auto; background: var(--bg); }}
+    .swap-panel h2 {{ font-size: 1rem; margin-bottom: 6px; }}
+    .swap-panel p {{ color: var(--text-muted); font-size: 0.8rem; max-width: 760px; line-height: 1.45; margin-bottom: 12px; }}
+    .swap-toolbar {{ display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }}
+    .swap-status {{ color: var(--text-muted); font-size: 0.78rem; }}
+    .swap-graph {{ width: 100%; height: 420px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-card); }}
+    .swap-edge {{ stroke: var(--text-muted); stroke-width: 8; stroke-linecap: round; cursor: pointer; pointer-events: stroke; opacity: 0.72; }}
+    .swap-edge.selected {{ stroke: #fbbf24; stroke-width: 4; }}
+    .swap-node {{ fill: #c084fc; stroke: var(--bg-card); stroke-width: 2; }}
+    .swap-node-label {{ fill: var(--text); font-size: 10px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }}
+    .matrix-wrap {{ overflow-x: auto; margin-top: 12px; }}
+    .matrix {{ border-collapse: collapse; font-family: var(--font-mono); font-size: 0.62rem; }}
+    .matrix th, .matrix td {{ border: 1px solid var(--border); padding: 3px 5px; text-align: center; min-width: 22px; }}
+    .matrix th {{ color: var(--text-muted); }}
+    .matrix .sum {{ color: #fbbf24; font-weight: 700; }}
   </style>
 </head>
 <body>
@@ -291,6 +365,14 @@ def render_html(data):
       <div class="btn-segmented">
         <button class="seg-btn active" id="view-dist" title="Degree distributions on log-log axes">📈 Distributions</button>
         <button class="seg-btn" id="view-metrics" title="Clustering and path-length comparison">📊 Topology Metrics</button>
+        <button class="seg-btn" id="view-swap" title="Interactively swap two edges while preserving degrees">🔁 Degree-Preserved Swap</button>
+      </div>
+      <div class="toolbar-group" id="distribution-mode-group">
+        <span class="toolbar-label">Bins:</span>
+        <div class="btn-segmented">
+          <button class="seg-btn active" id="dist-binned">Binned</button>
+          <button class="seg-btn" id="dist-exact">Exact</button>
+        </div>
       </div>
     </div>
     <div class="toolbar-group">
@@ -300,6 +382,7 @@ def render_html(data):
         <button class="seg-btn active g_nm" data-net="g_nm"><span class="net-dot" style="background:#38bdf8"></span>Erdős–Rényi</button>
         <button class="seg-btn active watts_strogatz" data-net="watts_strogatz"><span class="net-dot" style="background:#34d399"></span>Watts–Strogatz</button>
         <button class="seg-btn active barabasi_albert" data-net="barabasi_albert"><span class="net-dot" style="background:#fbbf24"></span>Barabási–Albert</button>
+        <button class="seg-btn active degree_preserved" data-net="degree_preserved"><span class="net-dot" style="background:#c084fc"></span>Degree-preserved</button>
       </div>
     </div>
     <div class="toolbar-group">
@@ -316,6 +399,7 @@ def render_html(data):
       <div class="plot-tooltip" id="tooltip"></div>
       <div class="legend-wrap" id="legend"></div>
       <div class="table-wrap" id="table-wrap" style="display:none;"></div>
+      <div class="swap-panel" id="swap-panel" style="display:none;"></div>
     </div>
   </div>
 
@@ -329,8 +413,32 @@ def render_html(data):
 
     // State
     let view = 'dist';
-    const active = {{ marvel: true, g_nm: true, watts_strogatz: true, barabasi_albert: true }};
-    const COLORS = {{ marvel: '#ef4444', g_nm: '#38bdf8', watts_strogatz: '#34d399', barabasi_albert: '#fbbf24' }};
+    let distributionMode = 'binned';
+    const active = {{ marvel: true, g_nm: true, watts_strogatz: true, barabasi_albert: true, degree_preserved: true }};
+    const COLORS = {{ marvel: '#ef4444', g_nm: '#38bdf8', watts_strogatz: '#34d399', barabasi_albert: '#fbbf24', degree_preserved: '#c084fc' }};
+    const MINI_NODES = ['Spider-Man', 'Iron Man', 'Wolverine', 'Storm', 'Captain America', 'Cyclops', 'Groot', 'Venom', 'Black Widow', 'Thor', ...Array.from({{ length: 20 }}, (_, i) => `Node ${{i + 11}}`)];
+    const MINI_INITIAL_EDGES = (() => {{
+      let state = 1937;
+      const edges = [];
+      const used = new Set();
+      const next = () => {{ state = (state * 1664525 + 1013904223) >>> 0; return state; }};
+      while (edges.length < 45) {{
+        const a = next() % 30;
+        const b = next() % 30;
+        const key = `${{Math.min(a, b)}}-${{Math.max(a, b)}}`;
+        if (a !== b && !used.has(key)) {{ used.add(key); edges.push([a, b]); }}
+      }}
+      return edges;
+    }})();
+    const MINI_POSITIONS = (() => {{
+      let state = 731;
+      const next = () => {{ state = (state * 1664525 + 1013904223) >>> 0; return state / 4294967296; }};
+      return MINI_NODES.map(() => ({{ x: 45 + next() * 810, y: 35 + next() * 450 }}));
+    }})();
+    let MINI_EDGES = MINI_INITIAL_EDGES.map(edge => [...edge]);
+    let selectedEdges = [];
+    let swapCount = 0;
+    let metricScope = 'whole';
 
     const container = document.getElementById('chart-container');
     const svg = d3.select('#plot-svg');
@@ -367,45 +475,69 @@ def render_html(data):
         if (!active[id]) return;
         DIST[id].forEach(d => {{ allK.push(d.k); allP.push(Math.max(d.p, 1e-6)); }});
       }});
-      // Marvel max degree dominates the x-range; keep common window
-      const maxK = d3.max(Object.keys(DIST).map(id => d3.max(DIST[id].filter(d => active[id]).map(d => d.k))));
+      // Degree zero cannot appear on a logarithmic axis, so isolates are omitted.
+      const positiveDist = id => DIST[id].filter(d => active[id] && d.k > 0);
+      const plottedDist = id => {{
+        if (distributionMode === 'exact') return positiveDist(id).map(d => ({{ x: d.k, k: d.k, label: `k = ${{d.k}}`, count: d.count, p: d.p }}));
+        const edges = [1, 2, 4, 8, 16, 32, 64, 128];
+        return edges.slice(0, -1).map((lower, i) => {{
+          const upper = edges[i + 1];
+          const members = positiveDist(id).filter(d => d.k >= lower && d.k < upper);
+          const count = members.reduce((sum, d) => sum + d.count, 0);
+          return {{ x: Math.sqrt(lower * (upper - 1)), k: lower, label: lower === upper - 1 ? `k = ${{lower}}` : `${{lower}}–${{upper - 1}}`, count, p: count / TOTAL_N }};
+        }}).filter(d => d.count > 0);
+      }};
+      const maxK = d3.max(Object.keys(DIST).map(id => d3.max(positiveDist(id).map(d => d.k))));
 
-      const xScale = d3.scaleLog().domain([1, maxK * 1.15]).range([0, plotW]);
+      const xScale = d3.scaleLog().base(10).domain([1, maxK * 1.15]).range([0, plotW]);
       let yMax = d3.max(allP) * 2.2;
       if (!isFinite(yMax) || yMax <= 0) yMax = 1;
       // Crop the bottom of the log-log plot: every observed P(k) is >= ~1/N
       // (here 1/303 ~ 0.0033), so pin the y-domain just below the data floor.
       const rawMinP = d3.min(allP);
       const yMin = (isFinite(rawMinP) && rawMinP > 0 ? rawMinP : 1 / TOTAL_N) / 1.2;
-      const yScale = d3.scaleLog().domain([yMin, yMax]).range([plotH, 0]);
+      const yDomainMin = 10 ** Math.floor(Math.log10(yMin));
+      const yDomainMax = 10 ** Math.ceil(Math.log10(yMax));
+      const yScale = d3.scaleLog().base(10).domain([yDomainMin, yDomainMax]).range([plotH, 0]);
+
+      function decadeTicks(scale) {{
+        const domain = scale.domain();
+        const first = Math.ceil(Math.log10(domain[0]));
+        const last = Math.floor(Math.log10(domain[1]));
+        return d3.range(first, last + 1).map(power => 10 ** power);
+      }}
+      const superscripts = {{ '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' }};
+      const powerLabel = value => `10${{String(Math.round(Math.log10(value))).split('').map(char => superscripts[char] || char).join('')}}`;
+      const xTicks = decadeTicks(xScale);
+      const yTicks = decadeTicks(yScale);
 
       // Grid
       g.append('g').attr('class', 'grid')
         .attr('transform', `translate(0,${{plotH}})`)
-        .call(d3.axisBottom(xScale).ticks(6, '~s').tickSize(-plotH).tickFormat(''));
+        .call(d3.axisBottom(xScale).tickValues(xTicks).tickSize(-plotH).tickFormat(''));
       g.append('g').attr('class', 'grid')
-        .call(d3.axisLeft(yScale).ticks(6, '~s').tickSize(-plotW).tickFormat(''));
+        .call(d3.axisLeft(yScale).tickValues(yTicks).tickSize(-plotW).tickFormat(''));
 
       // Axes
       g.append('g').attr('class', 'axis x-axis')
         .attr('transform', `translate(0,${{plotH}})`)
-        .call(d3.axisBottom(xScale).ticks(6, '~s'));
+        .call(d3.axisBottom(xScale).tickValues(xTicks).tickFormat(powerLabel));
       g.append('g').attr('class', 'axis y-axis')
-        .call(d3.axisLeft(yScale).ticks(6, '~s'));
+        .call(d3.axisLeft(yScale).tickValues(yTicks).tickFormat(powerLabel));
 
       g.append('text').attr('x', plotW / 2).attr('y', plotH + 42).attr('text-anchor', 'middle')
         .attr('fill', 'var(--text)').attr('font-size', '12px').attr('font-weight', '600')
-        .text('Degree k (log scale)');
+        .text('Undirected degree k (log scale)');
       g.append('text').attr('transform', 'rotate(-90)').attr('x', -plotH / 2).attr('y', -52)
         .attr('text-anchor', 'middle').attr('fill', 'var(--text)').attr('font-size', '12px')
         .attr('font-weight', '600')
-        .text('P(k) = fraction of nodes (log scale)');
+        .text('P(k) = fraction of nodes (undirected degree, log scale)');
 
       // Distribution curves
-      const order = ['barabasi_albert', 'watts_strogatz', 'g_nm', 'marvel'];
+      const order = ['degree_preserved', 'barabasi_albert', 'watts_strogatz', 'g_nm', 'marvel'];
       order.forEach(id => {{
         if (!active[id]) return;
-        const pts = DIST[id].map(d => ({{ x: Math.max(d.k, 1), y: Math.max(d.p, 1e-6), k: d.k, count: d.count, p: d.p }}));
+        const pts = plottedDist(id).map(d => ({{ ...d, y: Math.max(d.p, 1e-6) }}));
         const lineGen = d3.line()
           .x(d => xScale(d.x)).y(d => yScale(d.y)).curve(d3.curveMonotoneX);
 
@@ -442,7 +574,7 @@ def render_html(data):
       tooltip.style.opacity = 1;
       tooltip.innerHTML = `
         <div style="font-weight:700; color:${{COLORS[netId]}}; margin-bottom:4px;">${{netLabel(netId)}}</div>
-        <div style="margin-bottom:2px;">Degree <strong>k = ${{d.k}}</strong></div>
+        <div style="margin-bottom:2px;">Degree bin <strong>${{d.label}}</strong></div>
         <div style="margin-bottom:2px;"><strong>${{d.count}}</strong> node${{d.count === 1 ? '' : 's'}}</div>
         <div style="font-size:0.72rem; color:var(--text-muted);">P(k) = ${{d.p.toFixed(4)}}</div>
       `;
@@ -471,8 +603,7 @@ def render_html(data):
       const barH = plotH - barMargin.top - barMargin.bottom;
 
       // Palette for the grouped bars
-      const palette = ['#ef4444', '#38bdf8', '#34d399', '#fbbf24'];
-      const rowColors = rows.map((r, i) => ({{ id: r.id, color: r.id === 'marvel' ? '#ef4444' : palette[i] }}));
+      const rowColors = rows.map(r => ({{ id: r.id, color: COLORS[r.id] }}));
 
       const panels = [
         {{ key: 'clustering', title: 'Average Clustering Coefficient C', fmt: v => v.toFixed(3), yLabel: 'C' }},
@@ -560,24 +691,31 @@ def render_html(data):
       tableWrap.style.display = 'block';
       const head = ['Network', 'N', 'M', '<k>', 'C (clust.)', 'L (path)', 'Diam.', 'Comps.', 'Giant %', 'max k'];
       const rowsHtml = rows.map(r => `
-        <tr>
+        ${{(() => {{ const s = metricScope === 'giant' ? r.giant : r; return `<tr>
           <td><span class="net-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${{r.color}};margin-right:6px;"></span>${{r.label}}</td>
-          <td>${{r.N}}</td><td>${{r.M}}</td><td>${{r.avg_degree}}</td>
-          <td>${{r.clustering}}</td><td>${{r.avg_path}}</td><td>${{r.diameter}}</td>
-          <td>${{r.components}}</td><td>${{(r.gc_frac * 100).toFixed(1)}}%</td><td>${{r.max_degree}}</td>
-        </tr>`).join('');
+          <td>${{s.N}}</td><td>${{s.M}}</td><td>${{(2 * s.M / s.N).toFixed(3)}}</td>
+          <td>${{s.clustering}}</td><td>${{s.avg_path}}</td><td>${{s.diameter}}</td>
+          <td>${{s.components}}</td><td>${{(s.gc_frac * 100).toFixed(1)}}%</td><td>${{s.max_degree}}</td>
+        </tr>`; }})()}}`).join('');
 
       tableWrap.innerHTML = `
+        <div style="padding:8px 10px 0; display:flex; gap:6px; align-items:center;">
+          <span class="toolbar-label">Metrics:</span>
+          <button class="seg-btn ${{metricScope === 'whole' ? 'active' : ''}}" id="scope-whole">Whole network</button>
+          <button class="seg-btn ${{metricScope === 'giant' ? 'active' : ''}}" id="scope-giant">277-node giant component</button>
+        </div>
         <table class="compare-table">
           <thead><tr>${{head.map(h => `<th>${{h}}</th>`).join('')}}</tr></thead>
           <tbody>${{rowsHtml}}</tbody>
         </table>`;
 
+      document.getElementById('scope-whole').onclick = () => {{ metricScope = 'whole'; render(); }};
+      document.getElementById('scope-giant').onclick = () => {{ metricScope = 'giant'; render(); }};
       buildLegend(rows);
     }}
 
     function shortLabel(id) {{
-      return {{ marvel: 'Marvel', g_nm: 'E–R', watts_strogatz: 'W–S', barabasi_albert: 'B–A' }}[id] || id;
+      return {{ marvel: 'Marvel', g_nm: 'E–R', watts_strogatz: 'W–S', barabasi_albert: 'B–A', degree_preserved: 'D–P' }}[id] || id;
     }}
 
     function showMetricTip(event, panel, r) {{
@@ -599,13 +737,13 @@ def render_html(data):
 
     function buildLegend(rows) {{
       legendEl.innerHTML = `
-        <div style="font-weight:600; margin-bottom:2px;">Legend — ${{view === 'dist' ? 'Degrees P(k), log–log' : 'Network models'}}</div>
+        <div style="font-weight:600; margin-bottom:2px;">Legend — ${{view === 'dist' ? 'Undirected degrees P(k), log–log' : 'Network models'}}</div>
         ${{rows.map(r => `
           <div class="legend-item" data-grow="${{r.id}}">
             <span class="legend-line" style="background:${{r.color}}"></span>
             <span>${{r.label}}</span>
           </div>`).join('')}}
-        <div class="counter">All four networks share the same size: N = ${{TOTAL_N}}, M = ${{TOTAL_M}}</div>
+        <div class="counter">All five networks share the same size: N = ${{TOTAL_N}}, M = ${{TOTAL_M}}. Degree-zero isolates are omitted from the log plot.</div>
       `;
     }}
 
@@ -625,28 +763,118 @@ def render_html(data):
       document.querySelectorAll('#legend .legend-item').forEach(el => el.classList.remove('legend-off'));
     }}
 
+    function miniMatrix(edges) {{
+      const matrix = MINI_NODES.map(() => MINI_NODES.map(() => 0));
+      edges.forEach(([a, b]) => {{ matrix[a][b] = 1; matrix[b][a] = 1; }});
+      const header = `<tr><th></th>${{MINI_NODES.map((_, i) => `<th>${{i + 1}}</th>`).join('')}}<th class="sum">sum</th></tr>`;
+      const body = matrix.map((row, i) => `<tr><th>${{i + 1}}</th>${{row.map(v => `<td>${{v}}</td>`).join('')}}<td class="sum">${{row.reduce((a, b) => a + b, 0)}}</td></tr>`).join('');
+      return `<table class="matrix"><thead>${{header}}</thead><tbody>${{body}}</tbody></table>`;
+    }}
+
+    function renderSwap() {{
+      const panel = document.getElementById('swap-panel');
+      panel.innerHTML = `
+        <h2>Edge swapping keeps every degree fixed</h2>
+        <p>Click two non-touching edges in the 30-node demonstration. The swap $A--B, C--D \u2192 A--D, C--B$ changes relationships but preserves every row sum in the adjacency matrix.</p>
+        <div class="swap-toolbar">
+          <button class="seg-btn active" id="swap-reset">Reset mini-network</button>
+          <span class="swap-status" id="swap-status">Select two edges to swap. Swaps completed: ${{swapCount}}</span>
+        </div>
+        <svg class="swap-graph" id="swap-graph" viewBox="0 0 900 520" role="img" aria-label="Interactive 30-node degree-preserving edge swap graph"></svg>
+        <div class="matrix-wrap"><strong style="font-size:0.78rem;">Adjacency matrix row sums</strong><div id="swap-matrix"></div></div>`;
+      const svgMini = d3.select('#swap-graph');
+      const positions = MINI_POSITIONS;
+      const edgeLayer = svgMini.append('g');
+      edgeLayer.selectAll('line').data(MINI_EDGES).join('line')
+        .attr('class', (_, i) => `swap-edge ${{selectedEdges.includes(i) ? 'selected' : ''}}`)
+        .attr('data-edge', (_, i) => i)
+        .attr('x1', d => positions[d[0]].x).attr('y1', d => positions[d[0]].y)
+        .attr('x2', d => positions[d[1]].x).attr('y2', d => positions[d[1]].y)
+        .on('click', (_, d) => selectMiniEdge(MINI_EDGES.indexOf(d)));
+      const nodes = svgMini.append('g').selectAll('g').data(positions).join('g')
+        .attr('transform', (d, i) => `translate(${{d.x}},${{d.y}})`);
+      nodes.append('circle').attr('class', 'swap-node').attr('r', 11);
+      nodes.append('text').attr('class', 'swap-node-label').text((_, i) => i + 1);
+      nodes.append('title').text((_, i) => MINI_NODES[i]);
+      document.getElementById('swap-matrix').innerHTML = miniMatrix(MINI_EDGES);
+      document.getElementById('swap-reset').onclick = () => {{ MINI_EDGES = MINI_INITIAL_EDGES.map(edge => [...edge]); selectedEdges = []; swapCount = 0; renderSwap(); }};
+    }}
+
+    function selectMiniEdge(index) {{
+      if (selectedEdges.includes(index)) {{ selectedEdges = selectedEdges.filter(i => i !== index); renderSwap(); return; }}
+      selectedEdges.push(index);
+      if (selectedEdges.length < 2) {{
+        d3.selectAll('#swap-graph .swap-edge').classed('selected', (_, i) => selectedEdges.includes(i));
+        document.getElementById('swap-status').textContent = 'Select one more non-touching edge. Swaps completed: ' + swapCount;
+        return;
+      }}
+      const [first, second] = selectedEdges.map(i => MINI_EDGES[i]);
+      const touches = first.some(node => second.includes(node));
+      if (touches) {{ selectedEdges = []; renderSwap(); return; }}
+      const options = [
+        [[first[0], second[1]], [second[0], first[1]]],
+        [[first[0], second[0]], [first[1], second[1]]],
+      ];
+      const isExisting = ([a, b]) => MINI_EDGES.some(([c, d], i) =>
+        !selectedEdges.includes(i) && ((a === c && b === d) || (a === d && b === c)));
+      const candidate = options.find(pair => pair.every(([a, b]) => a !== b && !isExisting([a, b])));
+      if (candidate) {{
+        MINI_EDGES.splice(selectedEdges[1], 1, candidate[1]);
+        MINI_EDGES.splice(selectedEdges[0], 1, candidate[0]);
+        swapCount += 1;
+      }}
+      selectedEdges = [];
+      renderSwap();
+    }}
+
     function render() {{
+      document.getElementById('swap-panel').style.display = view === 'swap' ? 'block' : 'none';
       if (view === 'dist') {{
         document.getElementById('table-wrap').style.display = 'none';
         renderDistributions();
         const rows = SUMMARY.filter(s => active[s.id]);
         buildLegend(rows);
-      }} else {{
+      }} else if (view === 'metrics') {{
+        document.getElementById('table-wrap').style.display = 'block';
         renderMetrics();
+      }} else {{
+        document.getElementById('table-wrap').style.display = 'none';
+        svg.selectAll('*').remove();
+        legendEl.innerHTML = '';
+        renderSwap();
       }}
     }}
 
     // Controls ---------------------------------------------------------------
     document.getElementById('view-dist').onclick = () => {{
       view = 'dist';
-      document.querySelectorAll('#view-dist, #view-metrics').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#view-dist, #view-metrics, #view-swap').forEach(b => b.classList.remove('active'));
       document.getElementById('view-dist').classList.add('active');
       render();
     }};
     document.getElementById('view-metrics').onclick = () => {{
       view = 'metrics';
-      document.querySelectorAll('#view-dist, #view-metrics').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#view-dist, #view-metrics, #view-swap').forEach(b => b.classList.remove('active'));
       document.getElementById('view-metrics').classList.add('active');
+      render();
+    }};
+    document.getElementById('view-swap').onclick = () => {{
+      view = 'swap';
+      document.querySelectorAll('#view-dist, #view-metrics, #view-swap').forEach(b => b.classList.remove('active'));
+      document.getElementById('view-swap').classList.add('active');
+      render();
+    }};
+
+    document.getElementById('dist-binned').onclick = () => {{
+      distributionMode = 'binned';
+      document.getElementById('dist-binned').classList.add('active');
+      document.getElementById('dist-exact').classList.remove('active');
+      render();
+    }};
+    document.getElementById('dist-exact').onclick = () => {{
+      distributionMode = 'exact';
+      document.getElementById('dist-exact').classList.add('active');
+      document.getElementById('dist-binned').classList.remove('active');
       render();
     }};
 

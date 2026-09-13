@@ -10,23 +10,26 @@ wikilinks: ["exploring-degrees-marvel-dataset"]
 
 In [[exploring-degrees-marvel-dataset|the first article]] we dissected the **degrees** of the Marvel character network: a heavy-tailed in-degree distribution, a dominant Spider-Man hub, and a small world of islands. But a degree distribution alone does not tell us whether the network is *special*. To know what is exotic about a real network, we need **null models** — synthetic networks that are built to be "normal" under some rule, so we can ask: *does the Marvel network look like one of them?*
 
-This week we generate three classical null models with the **same number of nodes and edges** as the Marvel network and compare average clustering, path lengths, connectivity, and the degree distributions:
+This week we generate three classical null models and a degree-preserved null model with the **same number of nodes and edges** as the Marvel network. We compare average clustering, path lengths, connectivity, and the degree distributions:
 
 - 🎲 **Erdős–Rényi** `G(N, M)` — a purely random graph,
 - 🌀 **Watts–Strogatz** — a small-world ring with shortcuts,
 - 📈 **Barabási–Albert** — a scale-free graph grown by preferential attachment.
+- 🔁 **Degree-preserved edge swapping** — the Marvel degrees kept fixed while endpoints are shuffled.
 
 ---
 
 ## From directed to undirected
 
-The Marvel dataset is a **directed** graph (303 nodes, 1784 edges). The three null models above are classically defined on **undirected** graphs. We therefore compare all networks on their **undirected projection**, where an edge exists between two characters if *at least one* article links to the other. This collapses the 1784 directed links into **1434 unique undirected edges**.
+The Marvel dataset is a **directed** graph (303 nodes, 1784 edges). The first article's degree plot used **directed in-degree**, where Spider-Man has $k_{in}=106$. The null models above are classically defined on **undirected** graphs, so the applet in this article uses the **undirected projection**, where an edge exists between two characters if *at least one* article links to the other. This collapses the 1784 directed links into **1434 unique undirected edges**. Therefore, the applet's degree distribution is an **undirected degree distribution**, not the original in-degree distribution.
 
 - **Nodes:** $N = 303$
 - **Edges:** $M = 1434$
 - **Mean degree:** $\langle k \rangle = 2M/N \approx 9.47$
 
 Every synthetic network below is generated with exactly these $N$ and $M$, using a fixed random seed so the results are reproducible.
+
+The applet labels this explicitly as **Undirected degree $k$**. The two views answer different questions: directed in-degree measures how often a character is mentioned, while undirected degree measures how many distinct characters it is connected to in either direction.
 
 ---
 
@@ -44,30 +47,42 @@ Start from a **ring** where each node attaches to its 10 nearest neighbours ($k 
 
 Grow the graph node by node; each newcomer attaches to $m = 5$ existing nodes chosen **proportionally to their current degree** (rich-get-richer). This produces hubs and a degree distribution whose tail decays as a power law, $P(k) \propto k^{-\gamma}$ with $\gamma \approx 3$ (in the infinite-size limit) — the canonical *scale-free* model. The raw output has $5 \cdot (303-5) = 1490$ edges, so we remove a few random edges to match $M = 1434$.
 
+## Keeping the Hubs: Degree-Preserved Null Models
+
+Erdős–Rényi and the generative models change the degree sequence as well as the wiring. That makes them useful broad baselines, but it also makes it hard to tell whether a difference comes from Marvel's hubs or from the way those hubs connect to one another.
+
+The degree-preserved baseline starts with the Marvel projection and repeatedly swaps two disjoint edges:
+
+$$A\text{--}B,\ C\text{--}D \longrightarrow A\text{--}D,\ C\text{--}B.$$
+
+Every character keeps exactly the same degree, including Spider-Man's hub degree. What changes is the higher-order structure: triangles, assortativity, and thematic silos. This isolates the question we actually care about: **does Marvel's clustering survive after we keep its hubs but scramble who links to whom?**
+
+The interactive applet includes a **Degree-Preserved Swap** view. In its 30-node demonstration, click any two non-touching edges to perform the swap. The adjacency matrix below the graph shows the row sums before and after; they remain identical. In the topology view, use **Whole network** or **277-node giant component** to switch the scope of the comparison table.
+
 ---
 
 ## Head-to-head comparison
 
 <iframe src="assets/applets/network-models-comparison.html" width="100%" height="640" frameborder="0" style="border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden; background: var(--bg-surface); margin: 1.5rem 0;" title="Marvel network vs Erdős–Rényi, Watts–Strogatz and Barabási–Albert null models"></iframe>
 
-The applet shows the four degree distributions on a log–log scale and lets you toggle networks on and off (the **Legend** toggle in the toolbar hides the color legend). Switch to the **Topology Metrics** tab for the average clustering and path-length comparison.
+The applet shows five degree distributions on a log–log scale. The default **Binned** view groups degrees into logarithmic ranges (`1`, `2–3`, `4–7`, `8–15`, …), matching the heavy-tail view from the first article; switch to **Exact** for individual degree values. You can toggle networks on and off (the **Legend** toggle hides the color legend). Switch to **Topology Metrics** for the average clustering and path-length comparison, or **Degree-Preserved Swap** to manipulate the 30-node random mini-network inline.
 
 ---
 
 ## Interpretation of the metrics
 
-| Metric | Marvel | Erdős–Rényi | Watts–Strogatz | Barabási–Albert |
-| :--- | ---: | ---: | ---: | ---: |
-| Nodes $N$ | 303 | 303 | 303 | 303 |
-| Edges $M$ | 1434 | 1434 | 1434 | 1434 |
-| Mean degree $\langle k \rangle$ | 9.47 | 9.47 | 9.47 | 9.47 |
-| **Average clustering $C$** | **0.308** | 0.030 | 0.343 | 0.106 |
-| **Avg. path length $L$** | **2.67** | 2.77 | 3.21 | 2.60 |
-| Diameter | 6 | 5 | 5 | 4 |
-| Connected components | 19 | 1 | 1 | 1 |
-| Giant component size | 277 (91.4%) | 303 (100%) | 303 (100%) | 303 (100%) |
-| Max degree $k_{max}$ | 106 | 21 | 16 | 76 |
-| Degree assortativity | −0.10 | −0.02 | −0.02 | −0.12 |
+| Metric | Marvel | Erdős–Rényi | Watts–Strogatz | Barabási–Albert | Degree-preserved swap |
+| :--- | ---: | ---: | ---: | ---: | ---: |
+| Nodes $N$ | 303 | 303 | 303 | 303 | 303 |
+| Edges $M$ | 1434 | 1434 | 1434 | 1434 | 1434 |
+| Mean degree $\langle k \rangle$ | 9.47 | 9.47 | 9.47 | 9.47 | 9.47 |
+| **Average clustering $C$** | **0.308** | 0.030 | 0.343 | 0.106 | 0.175 |
+| **Avg. path length $L$** | **2.67** | 2.77 | 3.21 | 2.60 | 2.59 |
+| Diameter | 6 | 5 | 5 | 4 | 5 |
+| Connected components | 19 | 1 | 1 | 1 | 19 |
+| Giant component size | 277 (91.4%) | 303 (100%) | 303 (100%) | 303 (100%) | 277 (91.4%) |
+| Max degree $k_{max}$ | 106 | 21 | 16 | 76 | 106 |
+| Degree assortativity | −0.10 | −0.02 | −0.02 | 0.20 | −0.12 |
 
 The story is sharp:
 
@@ -75,9 +90,13 @@ The story is sharp:
 
 - **Hubs that erase small-world distances.** The distance collapse comes from extreme hubs: Spider-Man alone connects to 106 other characters. The Barabási–Albert model is the only one that reproduces such hubs ($k_{max} = 76$) together with the shortest mean path ($L \approx 2.60$). Marvel's $k_{max} = 106$ dwarfs even the scale-free model's.
 
-- **Marvel is not a single giant component.** Uniquely among the four, Marvel **fragments into 19 components** — the two real "islands" (277 and 9 nodes) from last week plus 17 isolates. Random graphs, Watts–Strogatz rings and even BA networks stay connected at this density. This is a genuine *modelling failure*: real networks can have disconnected, thematically isolated clusters.
+- **Marvel is not a single giant component.** Marvel **fragments into 19 components** — the two real "islands" (277 and 9 nodes) from last week plus 17 isolates. Random graphs, Watts–Strogatz rings and even BA networks stay connected at this density. The degree-preserved swap also fragments into 19 components because the edge swaps only shuffle endpoints within the giant component, leaving the smaller islands untouched. This is a genuine *modelling failure*: real networks can have disconnected, thematically isolated clusters.
 
 - **The degree distribution is heavy-tailed, not Poisson.** On the log–log plot the Marvel tail declines slowly and reaches far out (up to $k = 106$) — qualitatively like the Barabási–Albert model — while the Erdős–Rényi distribution collapses like a narrow Poisson bell around $\langle k \rangle$. We deliberately say *heavy-tailed* rather than *scale-free*: a power law is only one particular kind of heavy tail, and proving a strict power law from 303 nodes would require far more data.
+
+### What the degree-preserved model tells us
+
+The degree-preserved shuffle is a particularly clean control experiment. It keeps all 303 node degrees, Spider-Man's degree 106, the 1,434 edges, and the 19-component structure unchanged. Yet average clustering falls from **0.308** in Marvel to **0.175** after rewiring; on the 277-node giant component it falls from **0.320** to **0.175**. The hubs therefore explain the short paths, but they do not explain all of Marvel's triangles and thematic communities. Some of the clustering is genuinely encoded in *which* characters connect to one another, not only in how many connections each character has. Because this is one seeded randomization rather than a distribution of many shuffles, it is evidence for that structural difference, not a formal significance test.
 
 In short: **Marvel is a small-world network with heavy-tailed, hub-dominated degrees and random-graph-like distances** — but with disconnected islands that no classical null model produces.
 
@@ -121,6 +140,23 @@ G_ws.remove_edges_from(random.sample(list(G_ws.edges()), G_ws.number_of_edges() 
 G_ba = nx.barabasi_albert_graph(N, m=5, seed=42)
 G_ba.remove_edges_from(random.sample(list(G_ba.edges()), G_ba.number_of_edges() - M))
 
+# 4. Degree-preserved null: swap endpoints inside the 277-node giant component.
+# Smaller components remain unchanged, preserving every node degree and component.
+G_degree = G_marvel.copy()
+components = sorted(nx.connected_components(G_marvel), key=lambda nodes: min(nodes))
+giant_nodes = max(components, key=len)
+swap_rng = random.Random(42)
+for component in components:
+    if len(component) != len(giant_nodes):
+        continue
+    H = G_degree.subgraph(component).copy()
+    if H.number_of_edges() < 2:
+        continue
+    nx.double_edge_swap(H, nswap=10 * H.number_of_edges(),
+                        max_tries=100 * H.number_of_edges(), seed=swap_rng)
+    G_degree.remove_edges_from(list(G_degree.subgraph(component).edges()))
+    G_degree.add_edges_from(H.edges())
+
 def metrics(G):
     gc = G.subgraph(max(nx.connected_components(G), key=len))
     return {
@@ -135,7 +171,8 @@ def metrics(G):
     }
 
 for name, net in [("Marvel", G_marvel), ("Erdős–Rényi", G_er),
-                  ("Watts–Strogatz", G_ws), ("Barabási–Albert", G_ba)]:
+                  ("Watts–Strogatz", G_ws), ("Barabási–Albert", G_ba),
+                  ("Degree-preserved", G_degree)]:
     print(f"{name:>14}: {metrics(net)}")
 ```
 
