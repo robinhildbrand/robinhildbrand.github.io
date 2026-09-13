@@ -265,6 +265,7 @@ def render_html(data):
     .legend-item {{ display: flex; align-items: center; gap: 8px; }}
     .legend-line {{ width: 18px; height: 3px; border-radius: 2px; display: inline-block; }}
     .legend-off {{ opacity: 0.25; }}
+    .legend-hidden {{ display: none !important; }}
     .counter {{ font-family: var(--font-mono); font-size: 0.78rem; color: var(--text); margin-top: 2px; padding-top: 6px; border-top: 1px dashed var(--border); }}
     .bar-axis text {{ fill: var(--text-muted); font-size: 11px; }}
     .table-wrap {{
@@ -299,6 +300,12 @@ def render_html(data):
         <button class="seg-btn active g_nm" data-net="g_nm"><span class="net-dot" style="background:#38bdf8"></span>Erdős–Rényi</button>
         <button class="seg-btn active watts_strogatz" data-net="watts_strogatz"><span class="net-dot" style="background:#34d399"></span>Watts–Strogatz</button>
         <button class="seg-btn active barabasi_albert" data-net="barabasi_albert"><span class="net-dot" style="background:#fbbf24"></span>Barabási–Albert</button>
+      </div>
+    </div>
+    <div class="toolbar-group">
+      <span class="toolbar-label">Display:</span>
+      <div class="btn-segmented">
+        <button class="seg-btn active" id="btn-toggle-legend" title="Show or hide the color legend overlay">👁 Legend</button>
       </div>
     </div>
   </div>
@@ -366,7 +373,11 @@ def render_html(data):
       const xScale = d3.scaleLog().domain([1, maxK * 1.15]).range([0, plotW]);
       let yMax = d3.max(allP) * 2.2;
       if (!isFinite(yMax) || yMax <= 0) yMax = 1;
-      const yScale = d3.scaleLog().domain([0.0004, yMax]).range([plotH, 0]).nice();
+      // Crop the bottom of the log-log plot: every observed P(k) is >= ~1/N
+      // (here 1/303 ~ 0.0033), so pin the y-domain just below the data floor.
+      const rawMinP = d3.min(allP);
+      const yMin = (isFinite(rawMinP) && rawMinP > 0 ? rawMinP : 1 / TOTAL_N) / 1.2;
+      const yScale = d3.scaleLog().domain([yMin, yMax]).range([plotH, 0]);
 
       // Grid
       g.append('g').attr('class', 'grid')
@@ -647,6 +658,12 @@ def render_html(data):
         render();
       }};
     }});
+
+    document.getElementById('btn-toggle-legend').onclick = (event) => {{
+      const btn = event.currentTarget;
+      const hidden = legendEl.classList.toggle('legend-hidden');
+      btn.classList.toggle('active', !hidden);
+    }};
 
     window.addEventListener('resize', () => render());
 

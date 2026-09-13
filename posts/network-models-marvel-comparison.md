@@ -50,7 +50,7 @@ Grow the graph node by node; each newcomer attaches to $m = 5$ existing nodes ch
 
 <iframe src="assets/applets/network-models-comparison.html" width="100%" height="640" frameborder="0" style="border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden; background: var(--bg-surface); margin: 1.5rem 0;" title="Marvel network vs Erdős–Rényi, Watts–Strogatz and Barabási–Albert null models"></iframe>
 
-The applet shows the four degree distributions on a log–log scale and lets you toggle networks on and off. Switch to the **Topology Metrics** tab for the average clustering and path-length comparison.
+The applet shows the four degree distributions on a log–log scale and lets you toggle networks on and off (the **Legend** toggle in the toolbar hides the color legend). Switch to the **Topology Metrics** tab for the average clustering and path-length comparison.
 
 ---
 
