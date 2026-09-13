@@ -230,10 +230,7 @@ class MarkdownProcessor {
       }
 
       if (graphData) {
-        GraphParser.mountGraph(el, graphData, {
-          title: 'Interactive Network',
-          enableParticles: true
-        });
+        GraphParser.mountSVG(el, graphData);
       }
     });
   }

@@ -15,6 +15,7 @@ class App {
     this.initTheme();
     this.initSearchModal();
     this.initGlobalEvents();
+    this.initParallax();
 
     // Load posts
     await this.store.loadIndex();
@@ -22,6 +23,36 @@ class App {
     // Setup router
     window.addEventListener('hashchange', () => this.handleRoute());
     this.handleRoute();
+  }
+
+  // --- Parallax (Marvel banner & hero layers) ---
+  initParallax() {
+    const layers = document.querySelectorAll('.parallax-layer');
+    if (!layers.length) return;
+
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const sy = window.scrollY;
+      layers.forEach(el => {
+        if (el.offsetParent === null) return; // hidden (e.g. graph view)
+        const host = el.closest('.comic-banner') || el.closest('.hero-section') || document.body;
+        const rect = host.getBoundingClientRect();
+        if (rect.bottom < -40 || rect.top > window.innerHeight + 40) return;
+        const speed = parseFloat(el.dataset.speed || '0.12');
+        el.style.transform = `translateY(${(sy * speed * -1).toFixed(1)}px)`;
+      });
+    };
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    }, { passive: true });
+
+    window.addEventListener('resize', () => {
+      if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    });
+
+    update();
   }
 
   // --- Theme Management ---
@@ -125,7 +156,7 @@ class App {
             <div class="hero-content">
               <div class="hero-badge">
                 <span class="hero-badge-pulse"></span>
-                <span>Interactive Network Graph Blog</span>
+                <span>⚡ Interactive Marvel Network Graph</span>
               </div>
               <h1 class="hero-title">
                 Exploring Ideas Through <span class="hero-title-highlight">Connected Graphs</span> & Deep Reasoning.

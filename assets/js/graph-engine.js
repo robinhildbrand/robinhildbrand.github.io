@@ -24,6 +24,7 @@ class NetworkGraph {
       chargeStrength: options.chargeStrength !== undefined ? options.chargeStrength : -400,
       linkDistance: options.linkDistance !== undefined ? options.linkDistance : 200,
       collisionRadius: options.collisionRadius || 24,
+      autoFit: options.autoFit || false,
       onNodeClick: options.onNodeClick || null,
       onNodeHover: options.onNodeHover || null,
       onPathTraceComplete: options.onPathTraceComplete || null,
@@ -51,6 +52,7 @@ class NetworkGraph {
     this.pathTrailClearTimer = null;
 
     console.debug('[graph-engine] v19 loaded — manual camera, fly-through trace, autoreset');
+    this.destroyed = false;
     this.init();
   }
 
@@ -178,17 +180,26 @@ class NetworkGraph {
     this.data = { nodes, links: validLinks };
     this.particles = [];
 
-    // Compute in-degree (incoming links) for size & color scaling
+    // Compute degree (in + out) for size & color scaling
     const inDegMap = new Map();
-    validLinks.forEach(l => inDegMap.set(l.target, (inDegMap.get(l.target) || 0) + 1));
-    const maxIn = nodes.reduce((max, n) => Math.max(max, inDegMap.get(n.id) || 0), 0) || 1;
+    const outDegMap = new Map();
+    validLinks.forEach(l => {
+      inDegMap.set(l.target, (inDegMap.get(l.target) || 0) + 1);
+      outDegMap.set(l.source, (outDegMap.get(l.source) || 0) + 1);
+    });
+    const maxDeg = nodes.reduce((max, n) => Math.max(max, (inDegMap.get(n.id) || 0) + (outDegMap.get(n.id) || 0)), 0) || 1;
     nodes.forEach(n => {
       const inDegree = inDegMap.get(n.id) || 0;
+      const outDegree = outDegMap.get(n.id) || 0;
       n.inDegree = inDegree;
-      const t = Math.sqrt(inDegree / maxIn);
-      n._radius = this.options.nodeRadius * (1.2 + 1.5 * t);
+      n.outDegree = outDegree;
+      const deg = inDegree + outDegree;
+      const t = Math.sqrt(deg / maxDeg);
+      // Explicit `size` (JSON/DSL graphs) drives the radius (scaled + capped);
+      // otherwise fall back to a degree-scaled radius.
+      n._radius = n.size != null && n.size > 0 ? Math.min(n.size * 0.5, 13) : this.options.nodeRadius * (1.2 + 1.5 * t);
       n._color = d3.interpolateViridis(t);
-      n.isolated = inDegree === 0 && !validLinks.some(l => l.source === n.id);
+      n.isolated = deg === 0;
     });
 
     // Initialize particles if enabled
@@ -229,7 +240,10 @@ class NetworkGraph {
         .force('center', d3.forceCenter(this.width / 2, this.height / 2))
         .force('collision', d3.forceCollide().radius(d => (d._radius != null ? d._radius : (d.size || this.options.nodeRadius)) + this.options.collisionRadius))
         .alpha(1)
-        .on('tick', () => this.render());
+        .on('tick', () => this.render())
+        .on('end', () => {
+          if (!this.destroyed && this.options.autoFit) this.fitToViewport();
+        });
 
       // Pin isolated nodes (no connections) to a dedicated panel in the corner
       this.repositionIsolatedPanel();
@@ -256,6 +270,7 @@ class NetworkGraph {
       // Isolated nodes stay in their corner panel (not on the circle)
       this.repositionIsolatedPanel();
       this.render();
+      if (this.options.autoFit) this.fitToViewport();
     } else if (layoutName === 'random') {
       nodes.forEach(node => {
         const padding = 60;
@@ -265,6 +280,7 @@ class NetworkGraph {
         node.y = node.fy;
       });
       this.render();
+      if (this.options.autoFit) this.fitToViewport();
     }
 
     // Build adjacency list for BFS
@@ -336,7 +352,7 @@ class NetworkGraph {
       const [x, y] = coords;
       for (let i = this.data.nodes.length - 1; i >= 0; i--) {
         const node = this.data.nodes[i];
-        const r = (node.size || this.options.nodeRadius) + 4;
+        const r = (node._radius != null ? node._radius : (node.size || this.options.nodeRadius)) + 4;
         const dx = node.x - x;
         const dy = node.y - y;
         if (dx * dx + dy * dy < r * r) {
@@ -624,6 +640,7 @@ class NetworkGraph {
       });
 
       let alpha, strokeColor, lineWidth;
+      let isLinkActive = true;
 
       if (isPathTraceActive) {
         const sId = typeof link.source === 'object' ? link.source.id : link.source;
@@ -667,7 +684,7 @@ class NetworkGraph {
           lineWidth = 0.8;
         }
       } else {
-        const isLinkActive = !hasHighlight || activeLinks.has(link);
+        isLinkActive = !hasHighlight || activeLinks.has(link);
         const focus = this.getHighlightFocus();
         if (isLinkActive && focus && hasHighlight) {
           // Hover/selection highlight: colour in-links and out-links separately.
@@ -913,7 +930,7 @@ class NetworkGraph {
     const { ctx } = this;
     const arrowLen = 8;
     const angle = Math.atan2(t.y - s.y, t.x - s.x);
-    const targetRadius = (t.size || this.options.nodeRadius) + 3;
+    const targetRadius = (t._radius != null ? t._radius : (t.size || this.options.nodeRadius)) + 3;
     const endX = t.x - targetRadius * Math.cos(angle);
     const endY = t.y - targetRadius * Math.sin(angle);
 
@@ -1408,6 +1425,7 @@ class NetworkGraph {
   }
 
   destroy() {
+    this.destroyed = true;
     if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
     if (this.pathTraceAnimId) cancelAnimationFrame(this.pathTraceAnimId);
     if (this.pathTrailClearTimer) clearTimeout(this.pathTrailClearTimer);

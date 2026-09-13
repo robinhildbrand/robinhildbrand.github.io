@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
+<!-- Marvel Comics theme -->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,10 +17,10 @@
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
 
-  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <!-- Google Fonts: Bangers (comic display) + Inter (body) + JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
   <!-- KaTeX CSS for LaTeX Math -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
@@ -28,8 +29,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
 
   <!-- Site Stylesheets -->
-  <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/graph.css?v=20260904-26">
+  <link rel="stylesheet" href="assets/css/style.css?v=marvel-s2">
+  <link rel="stylesheet" href="assets/css/graph.css?v=20260913-s2">
 </head>
 <body>
 
@@ -89,6 +90,22 @@
     <a href="#/about" class="nav-link">About</a>
   </nav>
 
+  <!-- Comic Marquee Banner (Marvel theme, parallax) -->
+  <a class="comic-banner" href="#/post/exploring-degrees-marvel-dataset" aria-label="Open the Marvel Network article">
+    <div class="comic-banner-shine"></div>
+    <div class="comic-banner-inner">
+      <span class="comic-banner-label parallax-layer" data-speed="0.25">⚡ 303 HEROES · 1,784 CONNECTIONS</span>
+      <span class="comic-banner-title parallax-layer" data-speed="0.12">THE MARVEL NETWORK</span>
+      <div class="comic-banner-imgs parallax-layer" data-speed="0.06">
+        <img src="assets/images/heroes/spider-man.png" alt="Spider-Man">
+        <img src="assets/images/heroes/hulk.png" alt="Hulk">
+        <img src="assets/images/heroes/wolverine.jpg" alt="Wolverine">
+        <img src="assets/images/heroes/doctor-strange.jpg" alt="Doctor Strange">
+      </div>
+      <span class="comic-banner-cta">READ THE STORY →</span>
+    </div>
+  </a>
+
   <!-- Main Single Page Content Root -->
   <main id="app">
     <!-- Dynamic view content injected by app.js -->
@@ -128,10 +145,10 @@
   <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/languages/bash.min.js"></script>
 
   <!-- Core Blog & Graph Engines -->
-  <script src="assets/js/graph-engine.js?v=20260904-26"></script>
-  <script src="assets/js/graph-parser.js?v=20260904-26"></script>
-  <script src="assets/js/markdown.js?v=20260904-26"></script>
-  <script src="assets/js/posts-store.js?v=20260904-26"></script>
-  <script src="assets/js/app.js?v=20260904-26"></script>
+  <script src="assets/js/graph-engine.js?v=20260913-s2"></script>
+  <script src="assets/js/graph-parser.js?v=20260913-s2"></script>
+  <script src="assets/js/markdown.js?v=20260913-s2"></script>
+  <script src="assets/js/posts-store.js?v=20260913-s2"></script>
+  <script src="assets/js/app.js?v=20260913-s2"></script>
 </body>
 </html>
