@@ -330,7 +330,7 @@ class App {
                 <div class="sidebar-card-title">Article Connections</div>
                 <p style="font-size: 0.775rem; color: var(--text-secondary);">Interactive ego-network of related article connections.</p>
                 <div class="mini-graph-container" id="post-ego-graph"></div>
-                <a href="#/graph" style="font-size: 0.775rem; font-weight: 600; display: block; margin-top: 0.65rem; text-align: right;">Open Global Graph ↗</a>
+                <a href="#/graph" style="font-size: 0.775rem; font-weight: 600; display: block; margin-top: 0.65rem; text-align: right;">Open Global Graph</a>
               </div>
 
               ${headings.length > 1 ? `
