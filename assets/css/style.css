@@ -1933,3 +1933,57 @@ body.graph-view .comic-banner {
   color: var(--text-muted);
   font-size: 0.9rem;
 }
+
+/* --- Comic-style issue number on post cards --- */
+.comic-issue {
+  position: absolute;
+  top: -12px;
+  left: -10px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.35) 0%, transparent 45%),
+    var(--brand-red);
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 0 2px var(--ink), 2px 4px 0 var(--ink);
+  transform: rotate(-8deg);
+  text-shadow: 1px 2px 0 rgba(16, 20, 24, 0.8);
+  pointer-events: none;
+}
+
+/* --- Issue badge on single article page --- */
+.post-issue {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.35) 0%, transparent 45%),
+    var(--brand-red);
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 0 2px var(--ink), 2px 4px 0 var(--ink);
+  transform: rotate(-8deg);
+  text-shadow: 1px 2px 0 rgba(16, 20, 24, 0.8);
+  pointer-events: none;
+  align-self: flex-start;
+}
+
+.post-card:hover .comic-issue {
+  transform: rotate(-8deg) scale(1.08);
+  box-shadow: 0 0 0 2px var(--ink), 2px 5px 0 var(--brand-yellow);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}

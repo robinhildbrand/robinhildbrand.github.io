@@ -1,4 +1,4 @@
-# Robin Hildbrand — Graph Blog & Network Garden 🕸️
+# Robin Hildbrand — Graph Blog & Network Garden
 
 A modern, high-performance static website and digital garden built specifically for **GitHub Pages (No Jekyll)** that publishes technical blog posts with **interactive network graphs**, bi-directional wikilinks, and mathematical rigor.
 
@@ -8,7 +8,7 @@ A modern, high-performance static website and digital garden built specifically 
 
 ---
 
-## ✨ Features
+## Features
 
 - **No Jekyll / Zero Build Pipeline**: Pure static HTML5, CSS3, and modern JavaScript. Works immediately on GitHub Pages without needing Ruby, Bundler, or GitHub Actions.
 - **Interactive Force-Directed Graph Engine (D3.js)**:
@@ -29,7 +29,7 @@ A modern, high-performance static website and digital garden built specifically 
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 ├── .nojekyll                   # Instructs GitHub Pages to serve files without Jekyll
@@ -59,7 +59,7 @@ A modern, high-performance static website and digital garden built specifically 
 
 ---
 
-## 🚀 Quick Start (Local Development)
+## Quick Start (Local Development)
 
 Because this blog is a zero-build static site, you can run a local development server with any standard static file server:
 
@@ -73,7 +73,7 @@ python3 -m http.server 8000
 
 ---
 
-## ✍️ How to Publish a New Blog Post
+## How to Publish a New Blog Post
 
 ### Method 1: Using the CLI Tool (Recommended)
 
@@ -143,7 +143,7 @@ git push origin main
 
 ---
 
-## 🌐 Publishing to GitHub Pages
+## Publishing to GitHub Pages
 
 1. Push this repository to `https://github.com/robinhildbrand/robinhildbrand.github.io`.
 2. In GitHub repository settings:
@@ -155,6 +155,6 @@ git push origin main
 
 ---
 
-## 📄 License
+## License
 
 MIT License © 2026 Robin Hildbrand.

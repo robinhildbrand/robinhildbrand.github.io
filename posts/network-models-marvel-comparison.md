@@ -2,195 +2,77 @@
 title: "Marvel vs. Random, Small-World and Scale-Free Networks"
 date: "2026-09-11"
 author: "Robin, Giosué, Sébastien"
-readTime: "7 min read"
+readTime: "3 min read"
 tags: ["marvel", "network-models", "small-world", "heavy-tail", "complex-networks"]
 summary: "We compare the Marvel character network edge-by-edge with an Erdős–Rényi random graph, a Watts–Strogatz small-world network, and a Barabási–Albert scale-free network built with identical node and edge counts."
 wikilinks: ["exploring-degrees-marvel-dataset"]
 ---
 
-In [[exploring-degrees-marvel-dataset|the first article]] we dissected the **degrees** of the Marvel character network: a heavy-tailed in-degree distribution, a dominant Spider-Man hub, and a small world of islands. But a degree distribution alone does not tell us whether the network is *special*. To know what is exotic about a real network, we need **null models** — synthetic networks that are built to be "normal" under some rule, so we can ask: *does the Marvel network look like one of them?*
+In [[exploring-degrees-marvel-dataset|the first article]] we looked at the **degrees** of the Marvel character network: a heavy-tailed in-degree distribution, a dominant Spider-Man hub, and a small world of islands. But a degree distribution alone does not tell us whether the network is *special*. To know what is exotic about a real network, we need **null models** — synthetic networks built to be "normal" under some rule, so we can ask: *does the Marvel network look like one of them?*
 
-This week we generate three classical null models and a degree-preserved null model with the **same number of nodes and edges** as the Marvel network. We compare average clustering, path lengths, connectivity, and the degree distributions:
+## The phase transition: when a random network wakes up
 
-- 🎲 **Erdős–Rényi** `G(N, M)` — a purely random graph,
-- 🌀 **Watts–Strogatz** — a small-world ring with shortcuts,
-- 📈 **Barabási–Albert** — a scale-free graph grown by preferential attachment.
-- 🔁 **Degree-preserved edge swapping** — the Marvel degrees kept fixed while endpoints are shuffled.
+Drag the slider below and watch a random network come alive. At low average degree everything is tiny fragments. Then — suddenly — a **giant connected component** swallows most of the nodes. This is the Erdos–Renyi phase transition, and it defines what "pure randomness" looks like.
+
+<iframe src="assets/applets/phase-transition.html" width="100%" height="550" frameborder="0" style="border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden; background: var(--bg-surface); margin: 1.5rem 0;" title="Interactive: the birth of the giant component"></iframe>
+
+Set N = 303 (the number of Marvel characters) and drag the average degree to **9.47** — Marvel's actual value. At that density a random graph is *fully connected*: every character reaches every other in a few hops. Marvel, with its 19 disconnected components, does not behave like pure randomness.
 
 ---
 
 ## From directed to undirected
 
-The Marvel dataset is a **directed** graph (303 nodes, 1784 edges). The first article's degree plot used **directed in-degree**, where Spider-Man has $k_{in}=106$. The null models above are classically defined on **undirected** graphs, so the applet in this article uses the **undirected projection**, where an edge exists between two characters if *at least one* article links to the other. This collapses the 1784 directed links into **1434 unique undirected edges**. Therefore, the applet's degree distribution is an **undirected degree distribution**, not the original in-degree distribution.
+The Marvel dataset is directed (303 nodes, 1784 edges). The null models below work on the **undirected projection**: an edge exists if *at least one* article links to the other. This collapses the 1784 directed links into **1434 unique undirected edges**.
 
-- **Nodes:** $N = 303$
-- **Edges:** $M = 1434$
-- **Mean degree:** $\langle k \rangle = 2M/N \approx 9.47$
-
-Every synthetic network below is generated with exactly these $N$ and $M$, using a fixed random seed so the results are reproducible.
-
-The applet labels this explicitly as **Undirected degree $k$**. The two views answer different questions: directed in-degree measures how often a character is mentioned, while undirected degree measures how many distinct characters it is connected to in either direction.
+- **Nodes:** N = 303 | **Edges:** M = 1434 | **Mean degree:** k = 2M/N = 9.47
 
 ---
 
-## The three null models
+## Three null models and a control
 
-### 1. Erdős–Rényi random graph, $G(303, 1434)$
+**Erdos–Renyi G(303, 1434)** — pick 1434 edges uniformly at random among all possible pairs. No structure whatsoever.
 
-Pick $M$ distinct edges uniformly at random among the $\binom{N}{2}$ possible pairs. Nothing else. This is the statistical baseline: **no structure whatsoever**. If Marvel deviates strongly from this random baseline, it must have *organised* structure.
+**Watts–Strogatz WS(303, k=10, p=0.2)** — a ring where each node connects to its 10 nearest neighbours, then each edge is rewired with probability 0.2. High clustering plus long-range shortcuts.
 
-### 2. Watts–Strogatz small-world, $\text{WS}(303, k{=}10, p{=}0.2)$
+**Barabasi–Albert BA(303, m=5)** — grow the graph node by node; each newcomer attaches to 5 existing nodes chosen proportionally to their current degree. Produces hubs and a heavy-tailed distribution.
 
-Start from a **ring** where each node attaches to its 10 nearest neighbours ($k = 10$), then **rewire** each edge with probability $p = 0.2$. For moderate $p$ the graph keeps the ring's high clustering but gains long-range shortcuts that collapse distances — the celebrated *small-world* signature. We trim a few random edges afterwards to hit exactly $M = 1434$.
+**Degree-preserved swap** — shuffle the endpoints of two edges at a time, keeping every node's degree exactly as in Marvel:
 
-### 3. Barabási–Albert scale-free, $\text{BA}(303, m{=}5)$
+A-B, C-D --> A-D, C-B
 
-Grow the graph node by node; each newcomer attaches to $m = 5$ existing nodes chosen **proportionally to their current degree** (rich-get-richer). This produces hubs and a degree distribution whose tail decays as a power law, $P(k) \propto k^{-\gamma}$ with $\gamma \approx 3$ (in the infinite-size limit) — the canonical *scale-free* model. The raw output has $5 \cdot (303-5) = 1490$ edges, so we remove a few random edges to match $M = 1434$.
-
-## Keeping the Hubs: Degree-Preserved Null Models
-
-Erdős–Rényi and the generative models change the degree sequence as well as the wiring. That makes them useful broad baselines, but it also makes it hard to tell whether a difference comes from Marvel's hubs or from the way those hubs connect to one another.
-
-The degree-preserved baseline starts with the Marvel projection and repeatedly swaps two disjoint edges:
-
-$$A\text{--}B,\ C\text{--}D \longrightarrow A\text{--}D,\ C\text{--}B.$$
-
-Every character keeps exactly the same degree, including Spider-Man's hub degree. What changes is the higher-order structure: triangles, assortativity, and thematic silos. This isolates the question we actually care about: **does Marvel's clustering survive after we keep its hubs but scramble who links to whom?**
-
-The interactive applet includes a **Degree-Preserved Swap** view. In its 30-node demonstration, click any two non-touching edges to perform the swap. The adjacency matrix below the graph shows the row sums before and after; they remain identical. In the topology view, use **Whole network** or **277-node giant component** to switch the scope of the comparison table.
+This isolates the question we care about: *does Marvel's clustering survive when we scramble who links to whom, keeping only the hub structure?*
 
 ---
 
 ## Head-to-head comparison
 
-<iframe src="assets/applets/network-models-comparison.html" width="100%" height="640" frameborder="0" style="border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden; background: var(--bg-surface); margin: 1.5rem 0;" title="Marvel network vs Erdős–Rényi, Watts–Strogatz and Barabási–Albert null models"></iframe>
+<iframe src="assets/applets/network-models-comparison.html" width="100%" height="640" frameborder="0" style="border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden; background: var(--bg-surface); margin: 1.5rem 0;" title="Marvel network vs Erdos-Renyi, Watts-Strogatz and Barabasi-Albert null models"></iframe>
 
-The applet shows five degree distributions on a log–log scale. The default **Binned** view groups degrees into logarithmic ranges (`1`, `2–3`, `4–7`, `8–15`, …), matching the heavy-tail view from the first article; switch to **Exact** for individual degree values. You can toggle networks on and off (the **Legend** toggle hides the color legend). Switch to **Topology Metrics** for the average clustering and path-length comparison, or **Degree-Preserved Swap** to manipulate the 30-node random mini-network inline.
+The table summarises the key metrics:
 
----
-
-## Interpretation of the metrics
-
-| Metric | Marvel | Erdős–Rényi | Watts–Strogatz | Barabási–Albert | Degree-preserved swap |
+| Metric | Marvel | Erdos-Renyi | Watts-Strogatz | Barabasi-Albert | Degree-preserved |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| Nodes $N$ | 303 | 303 | 303 | 303 | 303 |
-| Edges $M$ | 1434 | 1434 | 1434 | 1434 | 1434 |
-| Mean degree $\langle k \rangle$ | 9.47 | 9.47 | 9.47 | 9.47 | 9.47 |
-| **Average clustering $C$** | **0.308** | 0.030 | 0.343 | 0.106 | 0.175 |
-| **Avg. path length $L$** | **2.67** | 2.77 | 3.21 | 2.60 | 2.59 |
+| Nodes N | 303 | 303 | 303 | 303 | 303 |
+| Edges M | 1434 | 1434 | 1434 | 1434 | 1434 |
+| **Avg. clustering C** | **0.308** | 0.030 | 0.343 | 0.106 | 0.175 |
+| **Avg. path length L** | **2.67** | 2.77 | 3.21 | 2.60 | 2.59 |
 | Diameter | 6 | 5 | 5 | 4 | 5 |
-| Connected components | 19 | 1 | 1 | 1 | 19 |
-| Giant component size | 277 (91.4%) | 303 (100%) | 303 (100%) | 303 (100%) | 277 (91.4%) |
-| Max degree $k_{max}$ | 106 | 21 | 16 | 76 | 106 |
-| Degree assortativity | −0.10 | −0.02 | −0.02 | 0.20 | −0.12 |
+| Components | 19 | 1 | 1 | 1 | 19 |
+| Giant component | 277 (91%) | 303 (100%) | 303 (100%) | 303 (100%) | 277 (91%) |
+| Max degree | 106 | 21 | 16 | 76 | 106 |
 
-The story is sharp:
+Three things stand out:
 
-- **High clustering, random distances — Marvel is small-world.** Its clustering $C \approx 0.31$ is **ten times larger** than the purely random Erdős–Rényi graph ($C \approx 0.03$) and almost identical to the Watts–Strogatz network ($C \approx 0.34$). Yet its average shortest path $L \approx 2.67$ is *shorter* than the random graph ($L \approx 2.77$). Marvel behaves like a Watts–Strogatz small-world with even better shortcuts.
+- **Marvel is small-world.** Clustering is 10x higher than Erdos-Renyi (C = 0.31 vs 0.03) and nearly identical to Watts-Strogatz (C = 0.34), while average path length is actually *shorter* (L = 2.67 vs 2.77).
 
-- **Hubs that erase small-world distances.** The distance collapse comes from extreme hubs: Spider-Man alone connects to 106 other characters. The Barabási–Albert model is the only one that reproduces such hubs ($k_{max} = 76$) together with the shortest mean path ($L \approx 2.60$). Marvel's $k_{max} = 106$ dwarfs even the scale-free model's.
+- **Hubs erase distances.** Spider-Man alone connects to 106 characters. Only the Barabasi-Albert model comes close (k_max = 76), and it achieves the shortest average path (L = 2.60).
 
-- **Marvel is not a single giant component.** Marvel **fragments into 19 components** — the two real "islands" (277 and 9 nodes) from last week plus 17 isolates. Random graphs, Watts–Strogatz rings and even BA networks stay connected at this density. The degree-preserved swap also fragments into 19 components because the edge swaps only shuffle endpoints within the giant component, leaving the smaller islands untouched. This is a genuine *modelling failure*: real networks can have disconnected, thematically isolated clusters.
+- **Marvel is fragmented.** 19 connected components, including 17 isolated characters. No classical null model reproduces this — they all stay fully connected at this density.
 
-- **The degree distribution is heavy-tailed, not Poisson.** On the log–log plot the Marvel tail declines slowly and reaches far out (up to $k = 106$) — qualitatively like the Barabási–Albert model — while the Erdős–Rényi distribution collapses like a narrow Poisson bell around $\langle k \rangle$. We deliberately say *heavy-tailed* rather than *scale-free*: a power law is only one particular kind of heavy tail, and proving a strict power law from 303 nodes would require far more data.
-
-### What the degree-preserved model tells us
-
-The degree-preserved shuffle is a particularly clean control experiment. It keeps all 303 node degrees, Spider-Man's degree 106, the 1,434 edges, and the 19-component structure unchanged. Yet average clustering falls from **0.308** in Marvel to **0.175** after rewiring; on the 277-node giant component it falls from **0.320** to **0.175**. The hubs therefore explain the short paths, but they do not explain all of Marvel's triangles and thematic communities. Some of the clustering is genuinely encoded in *which* characters connect to one another, not only in how many connections each character has. Because this is one seeded randomization rather than a distribution of many shuffles, it is evidence for that structural difference, not a formal significance test.
-
-In short: **Marvel is a small-world network with heavy-tailed, hub-dominated degrees and random-graph-like distances** — but with disconnected islands that no classical null model produces.
-
----
-
-## Reproducing the analysis
-
-```python
-import networkx as nx
-import random
-
-random.seed(42)
-
-# Undirected projection of the directed Marvel network. Nodes come from the
-# nodes file (17 of them are isolates with no edges and must be added by hand).
-G_marvel = nx.Graph()
-with open("week1_nodes.tsv") as f:
-    for line in f:
-        if line.startswith("#") or not line.strip():
-            continue
-        node = line.split("\t")[0]
-        if node != "node_id":               # skip header
-            G_marvel.add_node(node)
-G_marvel.add_edges_from(
-    (u, v)
-    for u, v in nx.read_edgelist("week1_edges.tsv", comments="#", nodetype=str).edges()
-    if u != v
-)
-
-N = G_marvel.number_of_nodes()   # 303
-M = G_marvel.number_of_edges()   # 1434
-
-# 1. Erdős–Rényi G(N, M): exactly M random edges
-G_er = nx.gnm_random_graph(N, M, seed=42)
-
-# 2. Watts–Strogatz ring, k=10, rewiring p=0.2 — trim to M edges
-G_ws = nx.watts_strogatz_graph(N, k=10, p=0.2, seed=42)
-G_ws.remove_edges_from(random.sample(list(G_ws.edges()), G_ws.number_of_edges() - M))
-
-# 3. Barabási–Albert, m=5 — trim to M edges
-G_ba = nx.barabasi_albert_graph(N, m=5, seed=42)
-G_ba.remove_edges_from(random.sample(list(G_ba.edges()), G_ba.number_of_edges() - M))
-
-# 4. Degree-preserved null: swap endpoints inside the 277-node giant component.
-# Smaller components remain unchanged, preserving every node degree and component.
-G_degree = G_marvel.copy()
-components = sorted(nx.connected_components(G_marvel), key=lambda nodes: min(nodes))
-giant_nodes = max(components, key=len)
-swap_rng = random.Random(42)
-for component in components:
-    if len(component) != len(giant_nodes):
-        continue
-    H = G_degree.subgraph(component).copy()
-    if H.number_of_edges() < 2:
-        continue
-    nx.double_edge_swap(H, nswap=10 * H.number_of_edges(),
-                        max_tries=100 * H.number_of_edges(), seed=swap_rng)
-    G_degree.remove_edges_from(list(G_degree.subgraph(component).edges()))
-    G_degree.add_edges_from(H.edges())
-
-def metrics(G):
-    gc = G.subgraph(max(nx.connected_components(G), key=len))
-    return {
-        "N": G.number_of_nodes(),
-        "M": G.number_of_edges(),
-        "clustering": round(nx.average_clustering(G), 3),
-        "avg_path": round(nx.average_shortest_path_length(gc), 3),
-        "diameter": nx.diameter(gc),
-        "components": nx.number_connected_components(G),
-        "giant_frac": round(len(gc) / G.number_of_nodes(), 3),
-        "max_degree": max(dict(G.degree()).values()),
-    }
-
-for name, net in [("Marvel", G_marvel), ("Erdős–Rényi", G_er),
-                  ("Watts–Strogatz", G_ws), ("Barabási–Albert", G_ba),
-                  ("Degree-preserved", G_degree)]:
-    print(f"{name:>14}: {metrics(net)}")
-```
-
-```
-        Marvel: {'N': 303, 'M': 1434, 'clustering': 0.307, 'avg_path': 2.674, 'diameter': 6, 'components': 19, 'giant_frac': 0.914, 'max_degree': 106}
-   Erdős–Rényi: {'N': 303, 'M': 1434, 'clustering': 0.03, 'avg_path': 2.771, 'diameter': 5, 'components': 1, 'giant_frac': 1.0, 'max_degree': 21}
-Watts–Strogatz: {'N': 303, 'M': 1434, 'clustering': 0.343, 'avg_path': 3.206, 'diameter': 5, 'components': 1, 'giant_frac': 1.0, 'max_degree': 16}
-Barabási–Albert: {'N': 303, 'M': 1434, 'clustering': 0.106, 'avg_path': 2.598, 'diameter': 4, 'components': 1, 'giant_frac': 1.0, 'max_degree': 76}
-```
+The degree distribution is heavy-tailed, not Poisson. We deliberately say *heavy-tailed* rather than *scale-free*: a power law is only one particular kind of heavy tail, and proving a strict power law from 303 nodes would require far more data.
 
 ---
 
 ## What makes the Marvel network model-resistant?
 
-Classical null models assume a **single generative rule**. The Marvel universe violates that assumption in three ways:
-
-1. **Canon and editorial revisits** — characters reappear across decades of storylines, so their articles are written *and rewritten* to link to many others. No single random process reproduces that accumulated popularity.
-2. **Theme silos** — X-Men characters cluster with X-Men characters, the Avengers with the Avengers. This community structure elevates clustering far above random expectations (and occasionally produces entirely disconnected islands).
-3. **One dominant protagonist** — Spider-Man is codified in *hundreds* of articles through "appearances in" typologies, a mechanism closer to preferential attachment than to uniform randomness.
-
-Because Marvel combines the **short paths of a random graph**, the **clustering of a small-world ring**, and the **heavy-tailed, hub-dominated degrees** that scale-free models were designed to explain, no single one of the classical models wins — *the real network borrows the best of all three*.
+Marvel combines the **short paths of a random graph**, the **clustering of a small-world ring**, and the **heavy-tailed, hub-dominated degrees** that scale-free models were designed to explain. No single classical model captures all three features at once. Add thematic silos (X-Men cluster with X-Men) and disconnected islands, and it becomes clear: *the real network borrows the best of all three models — plus things none of them can produce.*

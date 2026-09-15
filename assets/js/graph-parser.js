@@ -337,15 +337,15 @@ class GraphParser {
           <span>${options.title || 'Interactive View'}</span>
         </div>
         <div class="graph-toolbar">
-          <button class="graph-btn" data-action="layout" title="Cycle Layout (Force / A-Z Circle / Degree Circle)">🔄</button>
-          <button class="graph-btn" data-action="physics" title="Toggle Physics Simulation">⚡</button>
-          <button class="graph-btn" data-action="particles" title="Toggle Diffusion Particles">✨</button>
-          <button class="graph-btn" data-action="labels" title="Toggle Labels">🏷</button>
+          <button class="graph-btn graph-btn-text" data-action="layout" title="Cycle Layout (Force / A-Z Circle / Degree Circle)">Lay</button>
+          <button class="graph-btn graph-btn-text" data-action="physics" title="Toggle Physics Simulation">Phy</button>
+          <button class="graph-btn graph-btn-text" data-action="particles" title="Toggle Diffusion Particles">Dot</button>
+          <button class="graph-btn graph-btn-text" data-action="labels" title="Toggle Labels">Tag</button>
           <button class="graph-btn" data-action="zoom-in" title="Zoom In">+</button>
-          <button class="graph-btn" data-action="zoom-out" title="Zoom Out">−</button>
-          <button class="graph-btn" data-action="fit" title="Fit to Screen">⊙</button>
-          <button class="graph-btn" data-action="export" title="Export PNG Image">📷</button>
-          <button class="graph-btn" data-action="fullscreen" title="Toggle Fullscreen">⛶</button>
+          <button class="graph-btn" data-action="zoom-out" title="Zoom Out">-</button>
+          <button class="graph-btn" data-action="fit" title="Fit to Screen">Fit</button>
+          <button class="graph-btn graph-btn-text" data-action="export" title="Export PNG Image">PNG</button>
+          <button class="graph-btn graph-btn-text" data-action="fullscreen" title="Toggle Fullscreen">Full</button>
         </div>
       </div>
       <div class="graph-viewport" id="${graphId}"></div>

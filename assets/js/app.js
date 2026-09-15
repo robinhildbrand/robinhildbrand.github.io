@@ -83,7 +83,9 @@ class App {
   updateThemeButtonIcon(theme) {
     const btn = document.getElementById('theme-toggle-btn');
     if (!btn) return;
-    btn.innerHTML = theme === 'dark' ? '☀️' : '🌙';
+    btn.innerHTML = theme === 'dark'
+      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
     btn.setAttribute('title', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
   }
 
@@ -156,7 +158,7 @@ class App {
             <div class="hero-content">
               <div class="hero-badge">
                 <span class="hero-badge-pulse"></span>
-                <span>⚡ Interactive Marvel Network Graph</span>
+                <span>Interactive Marvel Network Graph</span>
               </div>
               <h1 class="hero-title">
                 Exploring Ideas Through <span class="hero-title-highlight">Connected Graphs</span> & Deep Reasoning.
@@ -166,13 +168,13 @@ class App {
               </p>
               <div class="hero-cta-group">
                 <a href="#/posts" class="btn btn-primary">Read Articles →</a>
-                <a href="#/graph" class="btn btn-secondary">Explore Knowledge Graph 🕸️</a>
+                <a href="#/graph" class="btn btn-secondary">Explore Knowledge Graph</a>
               </div>
             </div>
             <div class="hero-graph-preview">
               <div class="hero-graph-canvas-container" id="hero-graph-canvas"></div>
               <div class="hero-graph-overlay">
-                <span>⚡ Live Knowledge Graph Topology</span>
+                <span>Live Knowledge Graph Topology</span>
                 <a href="#/graph" style="font-weight: 600;">Full Graph →</a>
               </div>
             </div>
@@ -184,7 +186,7 @@ class App {
         <div class="container">
           <div class="section-header">
             <div>
-              <h2 class="section-title">✨ Featured Articles</h2>
+              <h2 class="section-title">Featured Articles</h2>
               <p class="section-subtitle">Deep dives with embedded interactive graph visualizations</p>
             </div>
             <a href="#/posts" style="font-weight: 600; font-size: 0.9rem;">View all posts (${posts.length}) →</a>
@@ -227,7 +229,7 @@ class App {
       <div class="container" style="padding: 3.5rem 1rem 5rem;">
         <div class="section-header" style="margin-bottom: 2rem;">
           <div>
-            <h1 class="section-title">📚 All Articles</h1>
+            <h1 class="section-title">All Articles</h1>
             <p class="section-subtitle">Research notes, tutorials, and graph visualizations</p>
           </div>
           <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -283,18 +285,21 @@ class App {
                   <span>/</span>
                   <a href="#/posts">Articles</a>
                   <span>/</span>
-                  <span>${postTitle}</span>
+                  <span>Issue ${currentIndex + 1}</span>
                 </nav>
-                <h1 class="post-title">${postTitle}</h1>
+                <div style="display:flex;align-items:center;gap:1rem;">
+                  <span class="post-issue" aria-label="Issue ${currentIndex + 1}">${currentIndex + 1}</span>
+                  <h1 class="post-title">${postTitle}</h1>
+                </div>
                 <div class="post-meta-bar">
                   <div class="post-author">
                     <img src="assets/images/avatar.svg" alt="${postAuthor}" class="author-avatar">
                     <span>${postAuthor}</span>
                   </div>
                   <span>•</span>
-                  <span>📅 ${postDate}</span>
+                  <span>${postDate}</span>
                   <span>•</span>
-                  <span>⏱️ ${postReadTime}</span>
+                  <span>${postReadTime}</span>
                 </div>
                 <div class="tag-list" style="margin-top: 1rem;">
                 </div>
@@ -322,7 +327,7 @@ class App {
 
             <aside class="post-sidebar">
               <div class="sidebar-card">
-                <div class="sidebar-card-title">🕸️ Article Connections</div>
+                <div class="sidebar-card-title">Article Connections</div>
                 <p style="font-size: 0.775rem; color: var(--text-secondary);">Interactive ego-network of related article connections.</p>
                 <div class="mini-graph-container" id="post-ego-graph"></div>
                 <a href="#/graph" style="font-size: 0.775rem; font-weight: 600; display: block; margin-top: 0.65rem; text-align: right;">Open Global Graph ↗</a>
@@ -330,7 +335,7 @@ class App {
 
               ${headings.length > 1 ? `
                 <div class="sidebar-card" style="margin-top: 1.5rem;">
-                  <div class="sidebar-card-title">📑 Table of Contents</div>
+                  <div class="sidebar-card-title">Table of Contents</div>
                   <ul class="toc-list">
                     ${headings.map(h => `
                       <li class="toc-item-${h.level}">
@@ -398,7 +403,7 @@ class App {
       <div class="global-graph-page">
         <div class="graph-instruction-popup" id="graph-instruction-popup">
           <div class="graph-instruction-card">
-            <div class="graph-instruction-icon">🕸️</div>
+            <div class="graph-instruction-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><line x1="8.5" y1="7.5" x2="10.5" y2="16.5"/><line x1="15.5" y1="7.5" x2="13.5" y2="16.5"/><line x1="9" y1="6" x2="15" y2="6"/></svg></div>
             <h2 class="graph-instruction-title">Marvel Character Network</h2>
             <p class="graph-instruction-text">
               Explore connections between <strong>303 Marvel characters</strong> derived from Wikipedia hyperlinks.
@@ -411,9 +416,9 @@ class App {
               The camera flies along the shortest path between them, revealing one edge at a time and every topic tag it touches.
             </p>
             <div class="graph-instruction-tips">
-              <span>🔍 Scroll to zoom</span>
-              <span>✋ Drag to pan</span>
-              <span>🖱️ Click two nodes to trace a path</span>
+              <span>Scroll to zoom</span>
+              <span>Drag to pan</span>
+              <span>Click two nodes to trace a path</span>
             </div>
             <button class="graph-instruction-btn" id="graph-instruction-dismiss">Got it</button>
           </div>
@@ -423,7 +428,7 @@ class App {
           <div class="global-graph-canvas-container" id="global-graph-canvas">
             <div class="graph-hud-controls">
               <div class="hud-pill">
-                <span>🔍</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input type="text" class="hud-search-input" id="graph-node-search" placeholder="Search nodes...">
               </div>
               <div class="hud-pill">
@@ -579,7 +584,7 @@ class App {
       <div class="container" style="padding: 3.5rem 1rem 5rem;">
         <div class="section-header">
           <div>
-            <h1 class="section-title">🏷️ Topics & Knowledge Clusters</h1>
+            <h1 class="section-title">Topics & Knowledge Clusters</h1>
             <p class="section-subtitle">Taxonomy of themes across all publications</p>
           </div>
         </div>
@@ -705,12 +710,14 @@ class App {
   // --- Helpers ---
   renderPostCard(post) {
     const tags = Array.isArray(post.tags) ? post.tags : [];
+    const issue = this.store.posts.indexOf(post);
     return `
       <a href="#/post/${post.slug}" class="post-card">
+        ${issue > -1 ? `<span class="comic-issue" aria-label="Issue ${issue + 1}">${issue + 1}</span>` : ''}
         <div class="post-card-meta">
-          <span class="post-card-date">📅 ${post.date}</span>
+          <span class="post-card-date">${post.date}</span>
           <span>•</span>
-          <span class="post-card-time">⏱️ ${post.readTime || '5 min'}</span>
+          <span class="post-card-time">${post.readTime || '5 min'}</span>
         </div>
         <h3 class="post-card-title">${post.title}</h3>
         <p class="post-card-excerpt">${post.summary || post.excerpt || ''}</p>
@@ -718,7 +725,7 @@ class App {
           <div class="tag-list">
             ${tags.slice(0, 2).map(t => `<span class="tag-badge">#${t}</span>`).join('')}
           </div>
-          <span class="post-graph-indicator">⚡ Interactive Graph</span>
+          <span class="post-graph-indicator">Interactive Graph</span>
         </div>
       </a>
     `;
@@ -776,7 +783,7 @@ class App {
 
       resultsContainer.innerHTML = results.map((res, i) => `
         <a href="${res.url}" class="search-result-item ${i === 0 ? 'selected' : ''}" onclick="document.getElementById('search-modal').classList.remove('open')">
-          <div class="search-result-title">${res.type === 'tag' ? '🏷️' : '📄'} ${res.title}</div>
+          <div class="search-result-title">${res.type === 'tag' ? '#' : ''} ${res.title}</div>
           <div class="search-result-snippet">${res.snippet}</div>
         </a>
       `).join('');

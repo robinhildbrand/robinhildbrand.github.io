@@ -31,6 +31,9 @@ class PostsStore {
       this.posts = this.getFallbackIndex();
     }
 
+    // Chronological order: oldest article first (issue #1), newest last
+    this.posts.sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+
     // Index tags
     this.tagsMap.clear();
     this.posts.forEach(post => {

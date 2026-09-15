@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Network Phase Transition</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a1a;color:#e0e0e0;display:flex;flex-direction:column;align-items:center;height:100vh;overflow:hidden;padding:.75rem 1rem .5rem}
+  h1{font-size:1.05rem;font-weight:700;color:#fff;text-align:center}
+  .sub{font-size:.72rem;color:#777;margin:.15rem 0 .5rem;text-align:center;max-width:420px;line-height:1.3}
+  .ctrls{display:flex;gap:1.25rem;align-items:center;flex-wrap:wrap;justify-content:center;margin-bottom:.5rem}
+  .cg{display:flex;align-items:center;gap:.4rem}
+  .cg label{font-size:.72rem;color:#999;font-weight:600}
+  .cg .v{font-size:.82rem;font-weight:700;color:#fbbf24;min-width:3em;text-align:right;font-variant-numeric:tabular-nums}
+  input[type=range]{width:120px;accent-color:#fbbf24;cursor:pointer}
+  #regen{background:#16162a;color:#bbb;border:1px solid #2a2a44;border-radius:6px;padding:.25rem .6rem;font-size:.7rem;cursor:pointer}
+  #regen:hover{background:#20203a;color:#fff}
+  .cvwrap{flex:1;width:100%;max-width:520px;border-radius:10px;overflow:hidden;border:1px solid #1a1a30;background:#0d0d1f;min-height:0}
+  canvas{width:100%;height:100%;display:block}
+  .mood{font-size:.78rem;color:#fbbf24;text-align:center;margin:.35rem 0 .15rem;min-height:1.1em;font-weight:500}
+  .stats{display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap}
+  .st{text-align:center}
+  .st .l{font-size:.55rem;color:#666;text-transform:uppercase;letter-spacing:.05em}
+  .st .n{font-size:.9rem;font-weight:700;color:#ddd;font-variant-numeric:tabular-nums}
+  .st .n.hi{color:#fbbf24}
+  .ref{font-size:.62rem;color:#555;margin-top:.2rem;text-align:center}
+  .ref b{color:#ef4444}
+</style>
+</head>
+<body>
+<h1>Watch a Random Network Come Alive</h1>
+<p class="sub">Drag the sliders and watch connected components form, merge, and swallow the network.</p>
+
+<div class="ctrls">
+  <div class="cg"><label>N</label><input type="range" id="nsl" min="50" max="300" step="10" value="150"><span class="v" id="nv">150</span></div>
+  <div class="cg"><label>&lt;k&gt;</label><input type="range" id="ksl" min="0" max="12" step="0.05" value="0.5"><span class="v" id="kv">0.50</span></div>
+  <button id="regen">New network</button>
+</div>
+
+<div class="cvwrap"><canvas id="cv"></canvas></div>
+<div class="mood" id="mood">A field of isolated strangers</div>
+
+<div class="stats">
+  <div class="st"><div class="l">Giant component</div><div class="n hi" id="gp">0%</div></div>
+  <div class="st"><div class="l">Components</div><div class="n" id="nc">150</div></div>
+  <div class="st"><div class="l">Edges</div><div class="n" id="ne">0</div></div>
+</div>
+<p class="ref">Marvel sits at <b>&lt;k&gt; = 9.47</b> &mdash; fully connected at this density</p>
+
+<script>
+var cv=document.getElementById('cv'),cx=cv.getContext('2d');
+var nsl=document.getElementById('nsl'),ksl=document.getElementById('ksl');
+var nvE=document.getElementById('nv'),kvE=document.getElementById('kv');
+var moodE=document.getElementById('mood'),gpE=document.getElementById('gp');
+var ncE=document.getElementById('nc'),neE=document.getElementById('ne');
+var W,H,seed=Date.now();
+
+function rng(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}
+
+function resize(){
+  var dpr=window.devicePixelRatio||1,rect=cv.parentElement.getBoundingClientRect();
+  W=rect.width;H=rect.height;
+  cv.width=W*dpr;cv.height=H*dpr;
+  cv.style.width=W+'px';cv.style.height=H+'px';
+  cx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+function build(){
+  resize();
+  var N=+nsl.value,avgK=+ksl.value;
+  nvE.textContent=N;kvE.textContent=avgK.toFixed(2);
+  var pad=20,xs=[],ys=[];
+  for(var i=0;i<N;i++){xs[i]=pad+rng()*(W-2*pad);ys[i]=pad+rng()*(H-2*pad)}
+  var p=Math.min(2*avgK/(N-1),1);
+  var adj=[],el=[];
+  for(var i=0;i<N;i++)adj[i]=[];
+  for(var i=0;i<N;i++)for(var j=i+1;j<N;j++)if(rng()<p){adj[i].push(j);adj[j].push(i);el.push([i,j])}
+  var vis=new Uint8Array(N),comp=new Int32Array(N),sz=[];
+  for(var i=0;i<N;i++){
+    if(vis[i])continue;var q=[i];vis[i]=1;var s=0;var ci=sz.length;
+    while(q.length){var u=q.pop();comp[u]=ci;s++;for(var k=0;k<adj[u].length;k++){var v=adj[u][k];if(!vis[v]){vis[v]=1;q.push(v)}}}
+    sz.push(s);
+  }
+  var gi=0;for(var c=1;c<sz.length;c++)if(sz[c]>sz[gi])gi=c;
+  var gcc=sz[gi]||0;
+  cx.clearRect(0,0,W,H);
+  cx.lineWidth=.5;
+  for(var e=0;e<el.length;e++){
+    var u=el[e][0],v=el[e][1],ig=comp[u]===gi&&comp[v]===gi;
+    cx.strokeStyle=ig?'rgba(251,191,36,.18)':'rgba(255,255,255,.06)';
+    cx.beginPath();cx.moveTo(xs[u],ys[u]);cx.lineTo(xs[v],ys[v]);cx.stroke();
+  }
+  for(var i=0;i<N;i++){
+    var ig=comp[i]===gi,deg=adj[i].length,r=ig?1+Math.sqrt(deg)*1.2:1+Math.sqrt(deg)*.6;
+    cx.fillStyle=ig?'#fbbf24':deg===0?'#5eead4':'#555';
+    cx.beginPath();cx.arc(xs[i],ys[i],Math.min(r,8),0,Math.PI*2);cx.fill();
+  }
+  gpE.textContent=Math.round(gcc/N*100)+'%';
+  ncE.textContent=sz.length;neE.textContent=el.length;
+  if(avgK<.3)moodE.textContent='A field of isolated strangers';
+  else if(avgK<.8)moodE.textContent='Tiny clusters form, whispering to each other';
+  else if(avgK<1.2)moodE.textContent='Something stirs at the threshold...';
+  else if(avgK<2)moodE.textContent='A giant emerges \u2014 the network is waking up';
+  else if(avgK<4)moodE.textContent='Most nodes are connected now';
+  else if(avgK<7)moodE.textContent='Almost everyone is in the club';
+  else if(avgK<10)moodE.textContent='Dense web \u2014 but Marvel is even denser';
+  else moodE.textContent='Near-clique territory. Marvel lives here at 9.47';
+}
+nsl.addEventListener('input',build);ksl.addEventListener('input',build);
+document.getElementById('regen').addEventListener('click',function(){seed=Date.now();build()});
+window.addEventListener('resize',build);
+build();
+</script>
+</body>
+</html>

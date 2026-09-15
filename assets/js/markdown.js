@@ -164,9 +164,9 @@ class MarkdownProcessor {
         const alertType = type.toLowerCase();
         let badge = 'NOTE';
         let cls = 'callout-note';
-        if (alertType === 'tip') { badge = '💡 TIP'; cls = 'callout-tip'; }
-        else if (alertType === 'warning' || alertType === 'caution') { badge = '⚠️ WARNING'; cls = 'callout-warning'; }
-        else { badge = 'ℹ️ NOTE'; cls = 'callout-note'; }
+        if (alertType === 'tip') { badge = 'TIP'; cls = 'callout-tip'; }
+        else if (alertType === 'warning' || alertType === 'caution') { badge = 'WARNING'; cls = 'callout-warning'; }
+        else { badge = 'NOTE'; cls = 'callout-note'; }
 
         return `
           <div class="callout ${cls}">

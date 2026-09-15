@@ -521,7 +521,7 @@ class NetworkGraph {
     if (node.description || node.summary) {
       html += `<div class="tooltip-desc">${node.description || node.summary}</div>`;
     }
-    html += `<div class="tooltip-connections">🔗 ${linksCount} connection${linksCount !== 1 ? 's' : ''} — <span class="deg-in">↓ ${inCount} in</span> · <span class="deg-out">↑ ${outCount} out</span></div>`;
+    html += `<div class="tooltip-connections">${linksCount} connection${linksCount !== 1 ? 's' : ''} — <span class="deg-in">${inCount} in</span> / <span class="deg-out">${outCount} out</span></div>`;
 
     this.tooltip.innerHTML = html;
     this.tooltip.style.left = `${x}px`;
