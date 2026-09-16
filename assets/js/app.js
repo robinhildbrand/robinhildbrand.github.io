@@ -346,11 +346,12 @@ class App {
       const currentIndex = allPosts.findIndex(p => p.slug === slug);
       const prevPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
       const nextPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
+      const postLayout = metadata.layout === 'full' ? 'full' : 'default';
 
       container.innerHTML = `
         <div class="reading-progress-bar" id="reading-progress"></div>
         <div class="container">
-          <div class="post-layout">
+          <div class="post-layout${postLayout === 'full' ? ' post-layout--full' : ''}">
             <article class="post-main">
               <header class="post-header">
                 <nav class="post-breadcrumb">

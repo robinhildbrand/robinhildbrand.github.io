@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spot the Intruder</title>
+<style>
+:root{color-scheme:dark;--bg:#0a0a1a;--fg:#e0e0e0;--header:#fff;--muted:#777;--badge-bg:#1e1e3a;--badge-border:#2a2a44;--badge-fg:#bbb;--hl:#fbbf24;--tile-bg:#111;--tile-border:#222;--tile-hover:#444;--img-bg:#1a1a2e;--avatar-a:#1e1e3a;--avatar-b:#2a2a4a;--name-fg:#ccc;--btn-bg:#16162a;--btn-border:#2a2a44;--btn-fg:#bbb;--btn-hover:#20203a;--btn-hover-fg:#fff;--done-fg:#aaa;--ref-fg:#555}
+:root[data-theme="light"]{color-scheme:light;--bg:#f1f5f9;--fg:#0f172a;--header:#0f172a;--muted:#64748b;--badge-bg:#ffffff;--badge-border:#e2e8f0;--badge-fg:#475569;--hl:#d97706;--tile-bg:#ffffff;--tile-border:#e2e8f0;--tile-hover:#94a3b8;--img-bg:#eef2f7;--avatar-a:#e2e8f0;--avatar-b:#cbd5e1;--name-fg:#0f172a;--btn-bg:#ffffff;--btn-border:#e2e8f0;--btn-fg:#334155;--btn-hover:#f1f5f9;--btn-hover-fg:#0f172a;--done-fg:#475569;--ref-fg:#94a3b8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow-y:auto;padding:1rem;transition:background .25s,color .25s}
+h1{font-size:1.1rem;font-weight:700;color:var(--header);text-align:center}
+.sub{font-size:.72rem;color:var(--muted);margin:.2rem 0 .8rem;text-align:center;max-width:440px;line-height:1.3}
+.hud{display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap;justify-content:center;margin-bottom:.8rem;font-size:.72rem}
+.hud .badge{background:var(--badge-bg);border:1px solid var(--badge-border);border-radius:6px;padding:.2rem .6rem;color:var(--badge-fg);font-weight:600}
+.hud .badge .hl{color:var(--hl)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:.7rem;width:100%;max-width:1200px;margin-bottom:.6rem}
+.tile{position:relative;border-radius:10px;overflow:hidden;border:2px solid var(--tile-border);background:var(--tile-bg);cursor:pointer;transition:transform .12s,border-color .15s,opacity .25s;aspect-ratio:3/4;display:flex;flex-direction:column}
+.tile:hover{border-color:var(--tile-hover);transform:scale(1.03)}
+.tile.wrong{opacity:.45;border-color:#94a3b8;cursor:default}
+.tile.correct{border-color:#22c55e;box-shadow:0 0 12px rgba(34,197,94,.35)}
+.tile.intruder{border-color:#ef4444;box-shadow:0 0 12px rgba(239,68,68,.4)}
+.tile.intruder .intruder-badge{display:block}
+.intruder-badge{display:none;position:absolute;top:4px;left:4px;background:#ef4444;color:#fff;font-size:.6rem;font-weight:700;padding:1px 6px;border-radius:4px;z-index:2}
+.tile img{width:100%;flex:1;object-fit:cover;background:var(--img-bg)}
+.tile .avatar{width:100%;flex:1;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;color:var(--fg);background:linear-gradient(135deg,var(--avatar-a),var(--avatar-b))}
+.tile .name{padding:.25rem .3rem;font-size:.62rem;color:var(--name-fg);text-align:center;line-height:1.2;min-height:1.8rem;display:flex;align-items:center;justify-content:center}
+.feedback{font-size:.78rem;color:var(--hl);text-align:center;margin:.3rem 0;min-height:1.2rem;font-weight:500;max-width:900px;line-height:1.3}
+.actions{display:flex;gap:.8rem;align-items:center;margin:.5rem 0 1rem}
+.btn{background:var(--btn-bg);color:var(--btn-fg);border:1px solid var(--btn-border);border-radius:6px;padding:.3rem .8rem;font-size:.72rem;cursor:pointer;font-weight:600;transition:background .12s,color .12s}
+.btn:hover{background:var(--btn-hover);color:var(--btn-hover-fg)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.primary{background:#b91c1c;border-color:#b91c1c;color:#fff}
+.btn.primary:hover{background:#991b1b}
+.done-text{font-size:.8rem;color:var(--done-fg);text-align:center;max-width:900px;line-height:1.4;margin:.5rem 0}
+.ref{font-size:.6rem;color:var(--ref-fg);margin-top:.5rem;text-align:center}
+</style>
+</head>
+<body>
+
+<h1>Spot the Intruder</h1>
+<p class="sub">In every squad, one hero is not friends with everyone. Find them. Tap a tile to accuse.</p>
+
+<div class="hud">
+  <div class="badge">Puzzle <span class="hl" id="pz-n">1</span>/<span id="pz-total">10</span></div>
+  <div class="badge">Difficulty: <span class="hl" id="pz-diff">Scout</span></div>
+  <div class="badge">Guesses: <span class="hl" id="pz-guesses">0</span></div>
+</div>
+
+<div class="grid" id="grid"></div>
+<div class="feedback" id="fb"></div>
+<div class="actions">
+  <button class="btn" id="btn-next" disabled>Next squad &rarr;</button>
+  <button class="btn" id="btn-restart" style="display:none">Play again</button>
+</div>
+<div class="done-text" id="done-text"></div>
+
+<p class="ref">Network data: Marvel Comics Wikipedia &middot; 303 characters, 1434 undirected edges</p>
+
+<script>
+var PUZZLES = [
+  {
+    "team": "X-Men",
+    "squadSize": 7,
+    "tiles": [
+      {
+        "id": "Betsy_Braddock",
+        "name": "Betsy Braddock",
+        "img": "../images/heroes/betsy-braddock.jpg",
+        "knowsInRoom": 7
+      },
+      {
+        "id": "Cyclops_(Marvel_Comics)",
+        "name": "Cyclops (Marvel Comics)",
+        "img": "../images/heroes/cyclops.png",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Emma_Frost",
+        "name": "Emma Frost",
+        "img": "../images/heroes/emma-frost.webp",
+        "knowsInRoom": 7
+      },
+      {
+        "id": "Jean_Grey",
+        "name": "Jean Grey",
+        "img": "../images/heroes/jean-grey.webp",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Rachel_Summers",
+        "name": "Rachel Summers",
+        "img": "../images/heroes/rachel-summers.jpg",
+        "knowsInRoom": 7
+      },
+      {
+        "id": "Storm_(Marvel_Comics)",
+        "name": "Storm (Marvel Comics)",
+        "img": "../images/heroes/storm.png",
+        "knowsInRoom": 7
+      },
+      {
+        "id": "Wolverine_(character)",
+        "name": "Wolverine (character)",
+        "img": "../images/heroes/wolverine.jpg",
+        "knowsInRoom": 7
+      }
+    ],
+    "intruder": {
+      "id": "Spider-Man",
+      "name": "Spider-Man",
+      "img": "../images/heroes/spider-man.png",
+      "knowsInRoom": 5
+    },
+    "fact": "That was the X-Men — a real clique where every member knows every other. Spider-Man only knew 5 of them."
+  },
+  {
+    "team": "X-Men (Cable & Jubilee)",
+    "squadSize": 6,
+    "tiles": [
+      {
+        "id": "Cable_(character)",
+        "name": "Cable (character)",
+        "img": "../images/heroes/cable.png",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Cyclops_(Marvel_Comics)",
+        "name": "Cyclops (Marvel Comics)",
+        "img": "../images/heroes/cyclops.png",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Emma_Frost",
+        "name": "Emma Frost",
+        "img": "../images/heroes/emma-frost.webp",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Jean_Grey",
+        "name": "Jean Grey",
+        "img": "../images/heroes/jean-grey.webp",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Jubilee_(character)",
+        "name": "Jubilee (character)",
+        "img": "../images/heroes/jubilee.webp",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Rachel_Summers",
+        "name": "Rachel Summers",
+        "img": "../images/heroes/rachel-summers.jpg",
+        "knowsInRoom": 6
+      }
+    ],
+    "intruder": {
+      "id": "Deadpool",
+      "name": "Deadpool",
+      "img": "../images/heroes/deadpool.png",
+      "knowsInRoom": 2
+    },
+    "fact": "That was the X-Men (Cable & Jubilee) — a real clique where every member knows every other. Deadpool only knew 2 of them."
+  },
+  {
+    "team": "Midnight Sons (Monsters)",
+    "squadSize": 6,
+    "tiles": [
+      {
+        "id": "Blade_(character)",
+        "name": "Blade (character)",
+        "img": "../images/heroes/blade.png",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Doctor_Strange",
+        "name": "Doctor Strange",
+        "img": "../images/heroes/doctor-strange.jpg",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Man-Thing",
+        "name": "Man-Thing",
+        "img": "../images/heroes/man-thing.jpg",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Morbius",
+        "name": "Morbius",
+        "img": "../images/heroes/morbius.png",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Spider-Man",
+        "name": "Spider-Man",
+        "img": "../images/heroes/spider-man.png",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Werewolf_by_Night",
+        "name": "Werewolf by Night",
+        "img": "../images/heroes/werewolf-by-night.webp",
+        "knowsInRoom": 5
+      }
+    ],
+    "intruder": {
+      "id": "She-Hulk",
+      "name": "She-Hulk",
+      "img": "../images/heroes/she-hulk.jpg",
+      "knowsInRoom": 4
+    },
+    "fact": "That was the Midnight Sons (Monsters) — a real clique where every member knows every other. She-Hulk only knew 4 of them."
+  },
+  {
+    "team": "X-Men (Scarlet Witch)",
+    "squadSize": 6,
+    "tiles": [
+      {
+        "id": "Betsy_Braddock",
+        "name": "Betsy Braddock",
+        "img": "../images/heroes/betsy-braddock.jpg",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Cyclops_(Marvel_Comics)",
+        "name": "Cyclops (Marvel Comics)",
+        "img": "../images/heroes/cyclops.png",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Scarlet_Witch",
+        "name": "Scarlet Witch",
+        "img": "../images/heroes/scarlet-witch.jpg",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Storm_(Marvel_Comics)",
+        "name": "Storm (Marvel Comics)",
+        "img": "../images/heroes/storm.png",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Wolverine_(character)",
+        "name": "Wolverine (character)",
+        "img": "../images/heroes/wolverine.jpg",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Jubilee_(character)",
+        "name": "Jubilee (character)",
+        "img": "../images/heroes/jubilee.webp",
+        "knowsInRoom": 6
+      }
+    ],
+    "intruder": {
+      "id": "Cable_(character)",
+      "name": "Cable (character)",
+      "img": "../images/heroes/cable.png",
+      "knowsInRoom": 4
+    },
+    "fact": "That was the X-Men (Scarlet Witch) — a real clique where every member knows every other. Cable only knew 4 of them."
+  },
+  {
+    "team": "Midnight Sons",
+    "squadSize": 6,
+    "tiles": [
+      {
+        "id": "Blade_(character)",
+        "name": "Blade (character)",
+        "img": "../images/heroes/blade.png",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Deadpool",
+        "name": "Deadpool",
+        "img": "../images/heroes/deadpool.png",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Doctor_Strange",
+        "name": "Doctor Strange",
+        "img": "../images/heroes/doctor-strange.jpg",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Ghost_Rider",
+        "name": "Ghost Rider",
+        "img": "../images/heroes/ghost-rider.jpg",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Moon_Knight",
+        "name": "Moon Knight",
+        "img": "../images/heroes/moon-knight.png",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Spider-Man",
+        "name": "Spider-Man",
+        "img": "../images/heroes/spider-man.png",
+        "knowsInRoom": 6
+      }
+    ],
+    "intruder": {
+      "id": "Hulk",
+      "name": "Hulk",
+      "img": "../images/heroes/hulk.png",
+      "knowsInRoom": 4
+    },
+    "fact": "That was the Midnight Sons — a real clique where every member knows every other. Hulk only knew 4 of them."
+  },
+  {
+    "team": "Midnight Sons (Gwenpool)",
+    "squadSize": 6,
+    "tiles": [
+      {
+        "id": "Blade_(character)",
+        "name": "Blade (character)",
+        "img": "../images/heroes/blade.png",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Deadpool",
+        "name": "Deadpool",
+        "img": "../images/heroes/deadpool.png",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Doctor_Strange",
+        "name": "Doctor Strange",
+        "img": "../images/heroes/doctor-strange.jpg",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Gwenpool",
+        "name": "Gwenpool",
+        "img": "../images/heroes/gwenpool.jpg",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Moon_Knight",
+        "name": "Moon Knight",
+        "img": "../images/heroes/moon-knight.png",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Spider-Man",
+        "name": "Spider-Man",
+        "img": "../images/heroes/spider-man.png",
+        "knowsInRoom": 6
+      }
+    ],
+    "intruder": {
+      "id": "Wolverine_(character)",
+      "name": "Wolverine (character)",
+      "img": "../images/heroes/wolverine.jpg",
+      "knowsInRoom": 4
+    },
+    "fact": "That was the Midnight Sons (Gwenpool) — a real clique where every member knows every other. Wolverine only knew 4 of them."
+  },
+  {
+    "team": "X-Men (no Storm)",
+    "squadSize": 6,
+    "tiles": [
+      {
+        "id": "Betsy_Braddock",
+        "name": "Betsy Braddock",
+        "img": "../images/heroes/betsy-braddock.jpg",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Cable_(character)",
+        "name": "Cable (character)",
+        "img": "../images/heroes/cable.png",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Emma_Frost",
+        "name": "Emma Frost",
+        "img": "../images/heroes/emma-frost.webp",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Jean_Grey",
+        "name": "Jean Grey",
+        "img": "../images/heroes/jean-grey.webp",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Jubilee_(character)",
+        "name": "Jubilee (character)",
+        "img": "../images/heroes/jubilee.webp",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Rachel_Summers",
+        "name": "Rachel Summers",
+        "img": "../images/heroes/rachel-summers.jpg",
+        "knowsInRoom": 5
+      }
+    ],
+    "intruder": {
+      "id": "Scarlet_Witch",
+      "name": "Scarlet Witch",
+      "img": "../images/heroes/scarlet-witch.jpg",
+      "knowsInRoom": 2
+    },
+    "fact": "That was the X-Men (no Storm) — a real clique where every member knows every other. Scarlet Witch only knew 2 of them."
+  },
+  {
+    "team": "Web Warriors",
+    "squadSize": 6,
+    "tiles": [
+      {
+        "id": "Black_Cat_(Marvel_Comics)",
+        "name": "Black Cat (Marvel Comics)",
+        "img": "../images/heroes/black-cat.jpg",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Mayday_Parker",
+        "name": "Mayday Parker",
+        "img": "../images/heroes/spider-girl.png",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Silk_(character)",
+        "name": "Silk (character)",
+        "img": "../images/heroes/silk.png",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Spider-Man",
+        "name": "Spider-Man",
+        "img": "../images/heroes/spider-man.png",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Spider-Woman_(Gwen_Stacy)",
+        "name": "Spider-Woman (Gwen Stacy)",
+        "img": "../images/heroes/spider-gwen.png",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Venom_(character)",
+        "name": "Venom (character)",
+        "img": "../images/heroes/venom.png",
+        "knowsInRoom": 5
+      }
+    ],
+    "intruder": {
+      "id": "Spider-Woman",
+      "name": "Spider-Woman",
+      "img": "../images/heroes/spider-woman.jpg",
+      "knowsInRoom": 4
+    },
+    "fact": "That was the Web Warriors — a real clique where every member knows every other. Spider-Woman only knew 4 of them."
+  },
+  {
+    "team": "X-Men (core)",
+    "squadSize": 6,
+    "tiles": [
+      {
+        "id": "Betsy_Braddock",
+        "name": "Betsy Braddock",
+        "img": "../images/heroes/betsy-braddock.jpg",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Cyclops_(Marvel_Comics)",
+        "name": "Cyclops (Marvel Comics)",
+        "img": "../images/heroes/cyclops.png",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Emma_Frost",
+        "name": "Emma Frost",
+        "img": "../images/heroes/emma-frost.webp",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Jean_Grey",
+        "name": "Jean Grey",
+        "img": "../images/heroes/jean-grey.webp",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Rachel_Summers",
+        "name": "Rachel Summers",
+        "img": "../images/heroes/rachel-summers.jpg",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Wolverine_(character)",
+        "name": "Wolverine (character)",
+        "img": "../images/heroes/wolverine.jpg",
+        "knowsInRoom": 6
+      }
+    ],
+    "intruder": {
+      "id": "Black_Cat_(Marvel_Comics)",
+      "name": "Black Cat (Marvel Comics)",
+      "img": "../images/heroes/black-cat.jpg",
+      "knowsInRoom": 2
+    },
+    "fact": "That was the X-Men (core) — a real clique where every member knows every other. Black Cat only knew 2 of them."
+  },
+  {
+    "team": "X-Men & Spider-Man",
+    "squadSize": 6,
+    "tiles": [
+      {
+        "id": "Betsy_Braddock",
+        "name": "Betsy Braddock",
+        "img": "../images/heroes/betsy-braddock.jpg",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Emma_Frost",
+        "name": "Emma Frost",
+        "img": "../images/heroes/emma-frost.webp",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Rachel_Summers",
+        "name": "Rachel Summers",
+        "img": "../images/heroes/rachel-summers.jpg",
+        "knowsInRoom": 5
+      },
+      {
+        "id": "Spider-Man",
+        "name": "Spider-Man",
+        "img": "../images/heroes/spider-man.png",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Storm_(Marvel_Comics)",
+        "name": "Storm (Marvel Comics)",
+        "img": "../images/heroes/storm.png",
+        "knowsInRoom": 6
+      },
+      {
+        "id": "Wolverine_(character)",
+        "name": "Wolverine (character)",
+        "img": "../images/heroes/wolverine.jpg",
+        "knowsInRoom": 5
+      }
+    ],
+    "intruder": {
+      "id": "Doctor_Strange",
+      "name": "Doctor Strange",
+      "img": "../images/heroes/doctor-strange.jpg",
+      "knowsInRoom": 3
+    },
+    "fact": "That was the X-Men & Spider-Man — a real clique where every member knows every other. Doctor Strange only knew 3 of them."
+  }
+];
+
+// ---- theme sync: match the site theme (light/dark) even inside the iframe ----
+(function() {
+  var html = document.documentElement;
+  function apply(theme) {
+    if (theme === 'light' || theme === 'dark') html.setAttribute('data-theme', theme);
+  }
+  function readParent() {
+    try {
+      var parentHtml = window.parent && window.parent.document &&
+        window.parent.document.documentElement;
+      return parentHtml ? parentHtml.getAttribute('data-theme') : null;
+    } catch (e) { return null; }
+  }
+  apply(readParent() || 'dark');
+  // follow live theme toggles on the host page
+  try {
+    var parentHtml = window.parent.document.documentElement;
+    var mo = new MutationObserver(function() { apply(readParent()); });
+    mo.observe(parentHtml, { attributes: true, attributeFilter: ['data-theme'] });
+  } catch (e) {}
+})();
+
+var grid = document.getElementById('grid');
+var fb = document.getElementById('fb');
+var pzN = document.getElementById('pz-n');
+var pzTotal = document.getElementById('pz-total');
+var pzDiff = document.getElementById('pz-diff');
+var pzGuesses = document.getElementById('pz-guesses');
+var btnNext = document.getElementById('btn-next');
+var btnRestart = document.getElementById('btn-restart');
+var doneText = document.getElementById('done-text');
+
+var cur = 0, guesses = 0, solved = false, total = PUZZLES.length;
+pzTotal.textContent = total;
+
+function shuffle(a) {
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function renderPuzzle() {
+  var p = PUZZLES[cur];
+  pzN.textContent = cur + 1;
+  guesses = 0;
+  solved = false;
+  pzGuesses.textContent = '0';
+  btnNext.disabled = true;
+  fb.textContent = 'Tap a tile to accuse. If wrong, you get a clue.';
+  // difficulty label: intruder who knows almost everyone is harder to spot
+  pzDiff.textContent = p.intruder.knowsInRoom >= p.squadSize - 2
+    ? 'Investigator' : 'Scout';
+  // shuffle tiles (mix members + intruder)
+  var tiles = shuffle(p.tiles.concat([p.intruder]));
+  grid.innerHTML = '';
+  tiles.forEach(function(t) {
+    var div = document.createElement('div');
+    div.className = 'tile';
+    div.dataset.id = t.id;
+    div.dataset.isIntruder = t.id === p.intruder.id ? '1' : '0';
+    // img or fallback avatar
+    if (t.img) {
+      var img = document.createElement('img');
+      img.src = t.img;
+      img.alt = t.name;
+      img.loading = 'lazy';
+      div.appendChild(img);
+    } else {
+      var av = document.createElement('div');
+      av.className = 'avatar';
+      av.textContent = t.name.charAt(0);
+      div.appendChild(av);
+    }
+    var nm = document.createElement('div');
+    nm.className = 'name';
+    nm.textContent = t.name;
+    div.appendChild(nm);
+    var badge = document.createElement('div');
+    badge.className = 'intruder-badge';
+    badge.textContent = 'INTRUDER';
+    div.appendChild(badge);
+    div.addEventListener('click', onGuess);
+    grid.appendChild(div);
+  });
+}
+
+function onGuess(e) {
+  if (solved) return;
+  var tile = e.currentTarget;
+  if (tile.classList.contains('wrong') || tile.classList.contains('correct')) return;
+  var p = PUZZLES[cur];
+  var isRight = tile.dataset.isIntruder === '1';
+  guesses++;
+  pzGuesses.textContent = guesses;
+  if (isRight) {
+    solved = true;
+    tile.classList.add('intruder');
+    // mark all tiles
+    var allTiles = grid.querySelectorAll('.tile');
+    for (var i = 0; i < allTiles.length; i++) {
+      allTiles[i].classList.add(allTiles[i].dataset.isIntruder === '1' ? 'intruder' : 'correct');
+      allTiles[i].removeEventListener('click', onGuess);
+    }
+    fb.textContent = 'Found the intruder in ' + guesses + (guesses === 1 ? ' pick!' : ' picks!');
+    if (cur < total - 1) {
+      btnNext.disabled = false;
+    } else {
+      doneText.textContent = 'All ' + total + ' squads cleared. Every team in Marvel is a clique — everyone knows everyone. That is what makes them teams.';
+      btnRestart.style.display = '';
+    }
+  } else {
+    tile.classList.add('wrong');
+    tile.removeEventListener('click', onGuess);
+    // find connections info
+    var connInfo = p.tiles.find(function(t) { return t.id === tile.dataset.id; });
+    var conn = connInfo ? connInfo.knowsInRoom : '?';
+    var room = p.tiles.length; // other heroes in this room
+    fb.textContent = tile.querySelector('.name').textContent + ' knows ' + conn +
+      ' of ' + room + ' others here \u2014 not the stranger.';
+  }
+}
+
+btnNext.addEventListener('click', function() {
+  if (cur < total - 1) { cur++; renderPuzzle(); }
+});
+btnRestart.addEventListener('click', function() {
+  cur = 0; doneText.textContent = ''; btnRestart.style.display = 'none'; renderPuzzle();
+});
+
+renderPuzzle();
+</script>
+</body>
+</html>

@@ -680,9 +680,18 @@ button, input, select, textarea {
    ========================================================================== */
 .post-layout {
   display: grid;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 1fr 350px;
   gap: 2.5rem;
   padding: 3rem 0 5rem;
+}
+
+.post-layout--full {
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.post-layout--full .post-sidebar {
+  display: none;
 }
 
 .post-main {
