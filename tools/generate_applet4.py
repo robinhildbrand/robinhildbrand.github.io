@@ -282,12 +282,12 @@ def generate_html(puzzles):
 :root[data-theme="light"]{color-scheme:light;--bg:#f1f5f9;--fg:#0f172a;--header:#0f172a;--muted:#64748b;--badge-bg:#ffffff;--badge-border:#e2e8f0;--badge-fg:#475569;--hl:#d97706;--tile-bg:#ffffff;--tile-border:#e2e8f0;--tile-hover:#94a3b8;--img-bg:#eef2f7;--avatar-a:#e2e8f0;--avatar-b:#cbd5e1;--name-fg:#0f172a;--btn-bg:#ffffff;--btn-border:#e2e8f0;--btn-fg:#334155;--btn-hover:#f1f5f9;--btn-hover-fg:#0f172a;--done-fg:#475569;--ref-fg:#94a3b8}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow-y:auto;padding:1rem;transition:background .25s,color .25s}
-h1{font-size:1.1rem;font-weight:700;color:var(--header);text-align:center}
-.sub{font-size:.72rem;color:var(--muted);margin:.2rem 0 .8rem;text-align:center;max-width:440px;line-height:1.3}
-.hud{display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap;justify-content:center;margin-bottom:.8rem;font-size:.72rem}
-.hud .badge{background:var(--badge-bg);border:1px solid var(--badge-border);border-radius:6px;padding:.2rem .6rem;color:var(--badge-fg);font-weight:600}
+h1{font-family:'Bangers','Impact','Arial Black',sans-serif;font-size:2rem;font-weight:400;font-style:italic;letter-spacing:.06em;color:var(--header);text-transform:uppercase;text-align:center;line-height:1.1;text-shadow:0 3px 0 var(--shadow)}
+.sub{font-size:.88rem;color:var(--muted);margin:.3rem 0 .9rem;text-align:center;max-width:720px;line-height:1.4}
+.hud{display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap;justify-content:center;margin-bottom:.9rem;font-size:.84rem}
+.hud .badge{font-family:'Bangers','Impact','Arial Black',sans-serif;background:var(--badge-bg);border:2px solid var(--badge-border);border-radius:6px;padding:.3rem .8rem;color:var(--badge-fg);font-weight:400;letter-spacing:.04em}
 .hud .badge .hl{color:var(--hl)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:.7rem;width:100%;max-width:1200px;margin-bottom:.6rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:1rem;width:100%;max-width:1400px;margin-bottom:.6rem}
 .tile{position:relative;border-radius:10px;overflow:hidden;border:2px solid var(--tile-border);background:var(--tile-bg);cursor:pointer;transition:transform .12s,border-color .15s,opacity .25s;aspect-ratio:3/4;display:flex;flex-direction:column}
 .tile:hover{border-color:var(--tile-hover);transform:scale(1.03)}
 .tile.wrong{opacity:.45;border-color:#94a3b8;cursor:default}
