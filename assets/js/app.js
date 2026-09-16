@@ -158,7 +158,7 @@ class App {
             <div class="hero-content">
               <div class="hero-badge">
                 <span class="hero-badge-pulse"></span>
-                <span>Interactive Marvel Network Graph</span>
+                <span>Marvel Hero Hub Network</span>
               </div>
               <h1 class="hero-title">
                 Exploring Ideas Through <span class="hero-title-highlight">Connected Graphs</span> & Deep Reasoning.
@@ -174,7 +174,7 @@ class App {
             <div class="hero-graph-preview">
               <div class="hero-graph-canvas-container" id="hero-graph-canvas"></div>
               <div class="hero-graph-overlay">
-                <span>Live Knowledge Graph Topology</span>
+                <span>Top 10 Marvel hubs · real mutual links</span>
                 <a href="#/graph" style="font-weight: 600;">Full Graph →</a>
               </div>
             </div>
@@ -199,26 +199,99 @@ class App {
       </section>
     `;
 
-    // Initialize Hero Graph
+    // Initialize Hero Hub Network (character pictures)
     const heroCanvasEl = document.getElementById('hero-graph-canvas');
     if (heroCanvasEl) {
-      const globalData = this.store.getGlobalGraphData();
-      const heroGraph = new NetworkGraph(heroCanvasEl, {
-        layout: 'force',
-        enableParticles: true,
-        chargeStrength: -160,
-        linkDistance: 70,
-        showLabels: true,
-        onNodeClick: (node) => {
-          if (node.slug) {
-            window.location.hash = `#/post/${node.slug}`;
-          } else if (node.type === 'tag') {
-          }
-        }
-      });
-      heroGraph.setData(globalData);
-      this.activeGraphInstances.push(heroGraph);
+      this.mountHeroHubNetwork(heroCanvasEl);
     }
+  }
+
+  // Static Marvel hub network with character pictures for the hero
+  mountHeroHubNetwork(container) {
+    const hubs = [
+      { id: 'Spider-Man', label: 'Spider-Man', in: 106, img: 'assets/images/heroes/spider-man.png' },
+      { id: 'Hulk', label: 'Hulk', in: 64, img: 'assets/images/heroes/hulk.png' },
+      { id: 'Wolverine_(character)', label: 'Wolverine', in: 60, img: 'assets/images/heroes/wolverine.jpg' },
+      { id: 'Doctor_Strange', label: 'Doctor Strange', in: 50, img: 'assets/images/heroes/doctor-strange.jpg' },
+      { id: 'Deadpool', label: 'Deadpool', in: 33, img: 'assets/images/heroes/deadpool.png' },
+      { id: 'She-Hulk', label: 'She-Hulk', in: 29, img: 'assets/images/heroes/she-hulk.jpg' },
+      { id: 'Scarlet_Witch', label: 'Scarlet Witch', in: 28, img: 'assets/images/heroes/scarlet-witch.jpg' },
+      { id: 'Black_Panther_(character)', label: 'Black Panther', in: 27, img: 'assets/images/heroes/black-panther.png' },
+      { id: 'Cyclops_(Marvel_Comics)', label: 'Cyclops', in: 26, img: 'assets/images/heroes/cyclops.png' },
+      { id: 'Luke_Cage', label: 'Luke Cage', in: 25, img: 'assets/images/heroes/luke-cage.png' }
+    ];
+
+    const links = [
+      ['Black_Panther_(character)', 'Deadpool'], ['Black_Panther_(character)', 'Doctor_Strange'],
+      ['Black_Panther_(character)', 'Luke_Cage'], ['Black_Panther_(character)', 'Scarlet_Witch'],
+      ['Cyclops_(Marvel_Comics)', 'Scarlet_Witch'], ['Cyclops_(Marvel_Comics)', 'Wolverine_(character)'],
+      ['Deadpool', 'Doctor_Strange'], ['Deadpool', 'Hulk'], ['Deadpool', 'She-Hulk'],
+      ['Deadpool', 'Spider-Man'], ['Deadpool', 'Wolverine_(character)'],
+      ['Doctor_Strange', 'Hulk'], ['Doctor_Strange', 'Luke_Cage'], ['Doctor_Strange', 'Scarlet_Witch'],
+      ['Doctor_Strange', 'She-Hulk'], ['Doctor_Strange', 'Spider-Man'],
+      ['Hulk', 'She-Hulk'], ['Hulk', 'Spider-Man'], ['Hulk', 'Wolverine_(character)'],
+      ['Luke_Cage', 'She-Hulk'], ['Luke_Cage', 'Spider-Man'],
+      ['Scarlet_Witch', 'She-Hulk'], ['Scarlet_Witch', 'Spider-Man'], ['Scarlet_Witch', 'Wolverine_(character)'],
+      ['She-Hulk', 'Spider-Man'], ['She-Hulk', 'Wolverine_(character)'],
+      ['Spider-Man', 'Wolverine_(character)']
+    ];
+
+    const CX = 230, CY = 185, RING = 142, SPR = 34;
+    const byId = Object.fromEntries(hubs.map(h => [h.id, h]));
+    const radOf = h => (h.id === 'Spider-Man' ? SPR : 8 + 14 * Math.sqrt(h.in / 106));
+    const maxIn = 106;
+    const pos = new Map([[hubs[0].id, { x: CX, y: CY }]]);
+
+    const ringOrder = ['Hulk', 'Wolverine_(character)', 'Doctor_Strange', 'Deadpool',
+      'She-Hulk', 'Luke_Cage', 'Black_Panther_(character)', 'Scarlet_Witch', 'Cyclops_(Marvel_Comics)'];
+    ringOrder.forEach((id, i) => {
+      const a = (-90 + i * 40) * Math.PI / 180;
+      pos.set(id, { x: CX + RING * Math.cos(a), y: CY + RING * Math.sin(a) });
+    });
+
+    const colorOf = h => {
+      const t = Math.sqrt(h.in / maxIn);
+      const hue = 217 - 195 * t;
+      return `hsl(${hue}, 55%, 55%)`;
+    };
+
+    const linePromise = pos => {
+      const dx = pos.x - CX, dy = pos.y - CY, len = Math.hypot(dx, dy) || 1;
+      return { x: CX + dx / len * SPR, y: CY + dy / len * SPR };
+    };
+
+    const clipDefs = hubs.filter(h => h.img).map(h => {
+      const p = pos.get(h.id), r = radOf(h);
+      return `<clipPath id="hc-${h.id.replace(/[^a-zA-Z0-9_-]/g, '')}"><circle cx="${p.x}" cy="${p.y}" r="${r}"/></clipPath>`;
+    }).join('');
+
+    const edges = links.map(([a, b]) => {
+      const pa = pos.get(a), pb = pos.get(b);
+      const ra = radOf(byId[a]), rb = radOf(byId[b]);
+      const dx = pb.x - pa.x, dy = pb.y - pa.y, len = Math.hypot(dx, dy) || 1;
+      const ux = dx / len, uy = dy / len;
+      return `<line x1="${pa.x + ux * ra}" y1="${pa.y + uy * ra}" x2="${pb.x - ux * rb}" y2="${pb.y - uy * rb}"/>`;
+    }).join('');
+
+    const nodes = hubs.map(h => {
+      const p = pos.get(h.id), r = radOf(h);
+      const tooltip = `<title>${h.label} - in-degree ${h.in}</title>`;
+      let body;
+      if (h.img) {
+        const cid = `hc-${h.id.replace(/[^a-zA-Z0-9_-]/g, '')}`;
+        body = `<image href="${h.img}" x="${p.x - r}" y="${p.y - r}" width="${r * 2}" height="${r * 2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${cid})"/>`;
+      } else {
+        body = `<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${colorOf(h)}" stroke="rgba(10,14,18,0.55)" stroke-width="2"/>`;
+      }
+      return `<g>${tooltip}${body}<text x="${p.x}" y="${p.y + r + 15}" text-anchor="middle" class="hero-hub-label">${h.label}</text></g>`;
+    }).join('');
+
+    container.innerHTML = `
+      <svg class="hero-hub-svg" viewBox="0 0 460 380" role="img" aria-label="Marvel hero hub network">
+        <defs>${clipDefs}</defs>
+        <g class="hero-hub-links">${edges}</g>
+        <g class="hero-hub-nodes">${nodes}</g>
+      </svg>`;
   }
 
   // 2. Posts List View
