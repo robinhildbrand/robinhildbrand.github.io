@@ -1,7 +1,7 @@
 [
   {
     "slug": "spot-the-intruder",
-    "title": "Spot the Intruder",
+    "title": "Marvel Network Games",
     "date": "2026-09-18",
     "author": "Robin, Giosué, Sébastien",
     "readTime": "2 min read",
@@ -13,7 +13,7 @@
       "mixing",
       "complex-networks"
     ],
-    "summary": "A minigame on real Marvel cliques: ten squads, each hiding one hero who is not friends with the whole room. Spot them, then see who bridges, who drifts, and who is unreachable.",
+    "summary": "Two explorable games on the real Marvel network: spot the intruder in a clique, then choose an infection source and compare centrality rankings.",
     "wikilinks": [
       "exploring-degrees-marvel-dataset",
       "network-models-marvel-comparison"
