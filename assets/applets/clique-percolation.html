@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Clique Percolation Lab</title>
+  <style>
+    :root { --ink:#edf4ff; --muted:#9aacc4; --panel:#111c2d; --line:#2b3e59; --blue:#4b9cff; --orange:#f6a04d; --purple:#a77bff; --gray:#687991; --green:#58d6a1; --bg:#08111f; --sans:Inter,ui-sans-serif,system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); background:var(--bg); font-family:var(--sans); }
+    .app { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(300px,.85fr); min-height:720px; overflow:hidden; background:radial-gradient(circle at 18% 15%,rgba(75,156,255,.13),transparent 34%),radial-gradient(circle at 85% 80%,rgba(167,123,255,.1),transparent 32%),var(--bg); }
+    .stage { min-height:720px; padding:clamp(18px,3.5vw,38px); border-right:1px solid rgba(154,172,196,.18); }
+    .eyebrow { margin:0 0 8px; color:var(--muted); font: .72rem var(--mono); letter-spacing:.12em; text-transform:uppercase; }
+    h1 { margin:0; font-size:clamp(1.45rem,3vw,2.3rem); letter-spacing:-.04em; }
+    .stage-note { max-width:590px; margin:8px 0 0; color:var(--muted); line-height:1.55; }
+    .toolbar { display:flex; flex-wrap:wrap; align-items:end; gap:10px; margin-top:18px; }
+    .field { display:grid; gap:5px; color:var(--muted); font: .7rem var(--mono); text-transform:uppercase; letter-spacing:.08em; }
+    select { min-width:145px; padding:9px 28px 9px 10px; color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:6px; font: .82rem var(--sans); }
+    .network { display:block; width:min(100%,720px); height:auto; margin:5px auto 0; overflow:visible; }
+    .edge { stroke:#8193ad; stroke-width:3.5; stroke-linecap:round; opacity:.72; transition:stroke .45s,opacity .45s,stroke-width .45s; }
+    .edge.added { stroke:var(--green); opacity:.98; }
+    .edge.candidate { stroke:var(--orange); stroke-width:4.5; stroke-dasharray:9 8; opacity:.72; cursor:pointer; }
+    .edge.candidate:hover { opacity:1; stroke-width:7; }
+    .edge.hit { stroke:transparent; stroke-width:25; cursor:pointer; }
+    .clique { opacity:.24; transition:fill .7s,opacity .7s; }
+    .community-a { fill:var(--blue); } .community-b { fill:var(--orange); }
+    .node circle { fill:#16263d; stroke:#dce9fa; stroke-width:3; transition:fill .6s,stroke .4s,filter .4s; }
+    .node.community-a circle { fill:var(--blue); }
+    .node.community-b circle { fill:var(--orange); }
+    .node.community-overlap circle { fill:url(#overlap); }
+    .node text { fill:#fff; font:700 16px var(--sans); text-anchor:middle; dominant-baseline:central; pointer-events:none; }
+    .node.isolated circle { fill:#3a4758; stroke:#8390a1; }
+    .node.flash circle { filter:drop-shadow(0 0 12px rgba(88,214,161,.95)); }
+    .node.unified circle { fill:var(--purple); stroke:#e9ddff; filter:drop-shadow(0 0 11px rgba(167,123,255,.72)); }
+    .clique.unified { fill:var(--purple); opacity:.38; }
+    .status-strip { display:flex; justify-content:space-between; gap:12px; color:var(--muted); font-size:.76rem; }
+    .status-strip strong { color:var(--green); font-family:var(--mono); }
+    .legend { display:flex; flex-wrap:wrap; gap:13px; margin-top:8px; color:var(--muted); font-size:.75rem; }
+    .legend span { display:inline-flex; align-items:center; gap:6px; } .swatch { width:10px; height:10px; border-radius:50%; display:inline-block; }
+    .swatch.blue { background:var(--blue); } .swatch.orange { background:var(--orange); } .swatch.gray { background:var(--gray); } .swatch.dash { width:18px; height:0; border-top:2px dashed var(--orange); border-radius:0; }
+    .panel { display:flex; flex-direction:column; justify-content:space-between; gap:20px; padding:clamp(22px,3.5vw,38px); background:rgba(17,28,45,.84); }
+    .panel h2 { margin:0; max-width:340px; font-size:clamp(1.4rem,3vw,2rem); line-height:1.05; letter-spacing:-.045em; }
+    .rule { width:46px; height:4px; margin:17px 0 18px; background:var(--orange); }
+    .message { min-height:142px; color:#dce7f7; line-height:1.65; } .message strong { color:#fff; } .formula { color:var(--orange); font-family:var(--mono); }
+    .steps { display:grid; gap:9px; margin:18px 0 0; padding:0; list-style:none; }
+    .steps li { display:flex; gap:9px; align-items:baseline; color:#667995; font-size:.8rem; transition:color .3s; }
+    .steps li::before { content:attr(data-step); display:grid; place-items:center; width:21px; height:21px; flex:0 0 21px; border:1px solid currentColor; border-radius:50%; font: .68rem var(--mono); }
+    .steps li.active { color:var(--green); } .steps li.done { color:var(--muted); }
+    .controls { display:flex; align-items:center; gap:12px; } button { border:0; border-radius:6px; font:700 .82rem var(--sans); cursor:pointer; }
+    .reset { padding:11px 15px; color:#09121f; background:var(--ink); } .reset:hover { background:#fff; }
+    .hint { color:var(--muted); font-size:.72rem; }
+    @keyframes pulse { 50% { transform:scale(1.13); } }
+    .node.pulse { animation:pulse .65s ease-out 1; }
+    @media (max-width:760px) { .app{display:block;min-height:0}.stage{min-height:500px;border-right:0;border-bottom:1px solid rgba(154,172,196,.18)}.panel{min-height:420px}.network{margin-top:0} }
+  </style>
+</head>
+<body>
+  <main class="app" id="app">
+    <section class="stage" aria-label="Interactive clique percolation network">
+      <p class="eyebrow">Network science / clique percolation</p>
+      <h1>Find the hidden merge path.</h1>
+      <p class="stage-note">Add the dashed links that create new k-cliques. A merge happens only when two cliques share at least <strong>k-1</strong> nodes.</p>
+      <div class="toolbar" aria-label="Experiment controls">
+        <label class="field">Clique size <select id="k-select"><option value="3">k = 3 · triangles</option><option value="4">k = 4 · tetrads</option></select></label>
+        <label class="field">Network <select id="network-select"><option value="chain">Bridge chain</option><option value="decoy">Decoy maze</option></select></label>
+      </div>
+      <svg class="network" id="network" viewBox="0 0 650 490" role="img" aria-labelledby="graph-title graph-desc">
+        <title id="graph-title">Clique percolation challenge network</title><desc id="graph-desc">A fixed network with colored clique communities and dashed candidate links to add.</desc>
+        <defs><linearGradient id="overlap" x1="0" x2="1" y1="0" y2="0"><stop offset="49%" stop-color="#4b9cff"/><stop offset="51%" stop-color="#f6a04d"/></linearGradient></defs>
+        <g id="cliques"></g><g id="edges"></g><g id="nodes"></g>
+      </svg>
+      <div class="status-strip"><span>Communities joined: <strong id="community-count">0 / 4</strong></span><span>Links added: <strong id="link-count">0</strong></span></div>
+      <div class="legend"><span><i class="swatch blue"></i>community A</span><span><i class="swatch orange"></i>community B</span><span><i class="swatch dash"></i>candidate link</span><span><i class="swatch gray"></i>decoy / isolated</span></div>
+    </section>
+    <aside class="panel">
+      <div>
+        <p class="eyebrow">Interactive lab</p>
+        <h2 id="panel-title">The Percolation Chain Reaction</h2>
+        <div class="rule"></div>
+        <div class="message" id="message"></div>
+        <ol class="steps" id="steps"></ol>
+      </div>
+      <div class="controls"><button class="reset" id="reset" type="button">Reset experiment</button><span class="hint">Switch k or network for a new puzzle</span></div>
+    </aside>
+  </main>
+  <script>
+    (() => {
+      const groups = { cliques:document.getElementById('cliques'), edges:document.getElementById('edges'), nodes:document.getElementById('nodes') };
+      const kSelect = document.getElementById('k-select');
+      const networkSelect = document.getElementById('network-select');
+      const message = document.getElementById('message');
+      const steps = document.getElementById('steps');
+      const communityCount = document.getElementById('community-count');
+      const linkCount = document.getElementById('link-count');
+      const reset = document.getElementById('reset');
+      const positions = { A:[90,105], B:[220,75], C:[350,105], D:[490,75], E:[155,260], F:[285,225], G:[420,260], H:[555,225], I:[230,405], J:[420,405] };
+      const configs = {
+        chain: { cliques3:[['A','B','C'],['C','D','E'],['E','F','G'],['G','H','I']], bridges3:[['B','D'],['D','F'],['F','H']], goal3:3, cliques4:[['A','B','C','D'],['D','E','F','G'],['G','H','I','J']], bridges4:[['B','E'],['C','E'],['E','H'],['F','H']], goal4:2, decoys:[['A','F'],['B','G'],['C','I'],['D','H'],['A','J']] },
+        decoy: { cliques3:[['A','B','C'],['C','D','E'],['E','F','G'],['G','H','I']], bridges3:[['B','D'],['D','F'],['F','H']], goal3:3, cliques4:[['A','B','C','D'],['D','E','F','G'],['G','H','I','J']], bridges4:[['B','E'],['C','E'],['E','H'],['F','H']], goal4:2, decoys:[['A','F'],['B','G'],['C','I'],['D','H'],['A','J'],['C','J'],['D','J']] }
+      };
+      let state;
+      const edgeKey = (a,b) => [a,b].sort().join('-');
+      const combinations = (items, size) => { if (size === 0) return [[]]; if (items.length < size) return []; const [first,...rest] = items; return combinations(rest,size-1).map(group => [first,...group]).concat(combinations(rest,size)); };
+      function allEdges(cliques) { return new Set(cliques.flatMap(clique => combinations(clique,2).map(pair => edgeKey(...pair)))); }
+      function edgeParts(key) { return key.split('-'); }
+      function hasClique(clique) { return combinations(clique,2).every(pair => state.edges.has(edgeKey(...pair))); }
+      function cliqueCandidates() { return combinations(Object.keys(positions), state.k).filter(hasClique); }
+      function render() {
+        const config = configs[networkSelect.value];
+        state = { k:Number(kSelect.value), edges:new Set(), added:new Set(), candidates:new Set(), solved:0, seen:new Set() };
+        state.edges = allEdges(config[`cliques${state.k}`]);
+        state.candidates = new Set(config[`bridges${state.k}`].concat(config.decoys).map(pair => edgeKey(...pair)));
+        groups.cliques.innerHTML = ''; groups.edges.innerHTML = ''; groups.nodes.innerHTML = '';
+        config[`cliques${state.k}`].forEach((clique,index) => { const polygon = document.createElementNS('http://www.w3.org/2000/svg','polygon'); polygon.setAttribute('points',clique.map(node => positions[node].join(',')).join(' ')); polygon.setAttribute('class',`clique ${index % 2 ? 'community-b' : 'community-a'}`); groups.cliques.appendChild(polygon); });
+        state.edges.forEach(key => drawEdge(key,'edge')); state.candidates.forEach(key => drawEdge(key,'edge candidate'));
+        const blueNodes = new Set(config[`cliques${state.k}`][0]);
+        const orangeNodes = new Set(config[`cliques${state.k}`].slice(1).flat());
+        Object.entries(positions).forEach(([node,[x,y]]) => { const membership = blueNodes.has(node) && orangeNodes.has(node) ? 'community-overlap' : blueNodes.has(node) ? 'community-a' : orangeNodes.has(node) ? 'community-b' : ''; const group = document.createElementNS('http://www.w3.org/2000/svg','g'); group.setAttribute('class',`node ${membership} ${node === 'J' ? 'isolated' : ''}`); group.dataset.node = node; group.setAttribute('transform',`translate(${x} ${y})`); const circle = document.createElementNS('http://www.w3.org/2000/svg','circle'); circle.setAttribute('r','23'); const label = document.createElementNS('http://www.w3.org/2000/svg','text'); label.textContent = node; group.append(circle,label); groups.nodes.appendChild(group); });
+        steps.innerHTML = Array.from({length:config[`goal${state.k}`]},(_,i) => `<li data-step="${i+1}" id="step-${i+1}">Bridge ${i+1}: discover a new ${state.k}-clique</li>`).join('');
+        message.innerHTML = `Choose <strong>k = ${state.k}</strong>. Add dashed links until a new ${state.k}-clique appears. Decoys do not create one. Communities merge only when they share <span class="formula">k - 1 = ${state.k - 1}</span> nodes.`;
+        updateCounters();
+      }
+      function drawEdge(key, className) {
+        const [a,b] = edgeParts(key); const line = document.createElementNS('http://www.w3.org/2000/svg','line'); line.dataset.edge = key; line.setAttribute('class',className); line.setAttribute('x1',positions[a][0]); line.setAttribute('y1',positions[a][1]); line.setAttribute('x2',positions[b][0]); line.setAttribute('y2',positions[b][1]);
+        if (className.includes('candidate')) { line.addEventListener('click',() => addEdge(key)); line.setAttribute('tabindex','0'); line.setAttribute('role','button'); line.setAttribute('aria-label',`Add link ${a}-${b}`); groups.edges.appendChild(line); } else groups.edges.appendChild(line);
+      }
+      function addEdge(key) {
+        if (state.added.has(key)) return;
+        state.added.add(key); state.edges.add(key);
+        const visible = [...groups.edges.querySelectorAll(`[data-edge="${key}"]`)].find(edge => edge.classList.contains('candidate'));
+        if (visible) { visible.classList.remove('candidate'); visible.classList.add('added'); }
+        const newCliques = cliqueCandidates().filter(clique => { const id = clique.join(''); return !state.seen.has(id) && !configs[networkSelect.value][`cliques${state.k}`].some(base => base.join('') === id); });
+        newCliques.forEach(clique => state.seen.add(clique.join('')));
+        const newClique = newCliques[0];
+        if (newClique) { newClique.map(node => document.querySelector(`[data-node="${node}"]`)).forEach(node => { node.classList.add('flash','pulse'); setTimeout(() => node.classList.remove('flash','pulse'),900); }); state.solved++; const step = document.getElementById(`step-${state.solved}`); if (step) { step.classList.add('active'); for (let i=1;i<state.solved;i++) document.getElementById(`step-${i}`)?.classList.add('done'); } message.innerHTML = `<strong>New ${state.k}-clique found:</strong> {${newClique.join(', ')}}. It shares ${state.k - 1} nodes with a neighboring clique, so the percolation community grows.`; if (state.solved >= configs[networkSelect.value][`goal${state.k}`]) finish(); } else message.innerHTML = `That link is a <strong>decoy</strong>: it does not complete a ${state.k}-clique. Read the existing edges carefully and try another dashed link.`;
+        updateCounters();
+      }
+      function finish() { message.innerHTML = `<strong>Percolation complete!</strong> You found every bridge. Each new clique shared <span class="formula">k - 1 = ${state.k - 1}</span> nodes, chaining the local groups into one giant overlapping community.`; groups.cliques.querySelectorAll('.clique').forEach(shape => shape.classList.add('unified')); groups.nodes.querySelectorAll('.node:not(.isolated)').forEach(node => node.classList.add('unified')); }
+      function updateCounters() { communityCount.textContent = `${state.solved} / ${configs[networkSelect.value][`goal${state.k}`]}`; linkCount.textContent = state.added.size; }
+      kSelect.addEventListener('change',render); networkSelect.addEventListener('change',render); reset.addEventListener('click',render); render();
+    })();
+  </script>
+</body>
+</html>
