@@ -1,5 +1,24 @@
 [
   {
+    "slug": "typing-marvel-relationships-with-concordances",
+    "title": "Typing Marvel Relationships with Wikipedia Concordances",
+    "date": "2026-09-30",
+    "author": "Robin Hildbrand",
+    "readTime": "6 min read",
+    "tags": [
+      "marvel",
+      "community-detection",
+      "text-mining",
+      "network-analysis"
+    ],
+    "summary": "The Marvel giant component becomes a typed graph when Wikipedia concordances supply evidence for family, foe, and ally labels inside and between Louvain communities.",
+    "wikilinks": [
+      "clique-percolation-k3",
+      "exploring-degrees-marvel-dataset"
+    ],
+    "file": "posts/typing-marvel-relationships-with-concordances.md"
+  },
+  {
     "slug": "clique-percolation-k3",
     "title": "Clique Percolation Lab: Finding the Hidden Merge Path",
     "date": "2026-09-23",

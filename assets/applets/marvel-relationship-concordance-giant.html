@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marvel Giant Component: Concordances and Louvain Communities</title>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+  <style>
+    :root { --bg: #10151c; --panel: #18212b; --card: #111820; --text: #f4f7fb; --muted: #9aa9b8; --border: #31404f; --family: #c084fc; --foe: #fb7185; --ally: #34d399; --unknown: #94a3b8; --accent: #fbbf24; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 Georgia, serif; }
+    button, input, select { color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font: inherit; }
+    button { cursor: pointer; } button:hover { border-color: var(--accent); }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; padding: 14px 16px; background: var(--panel); border-bottom: 1px solid var(--border); }
+    .control { display: grid; gap: 4px; min-width: 175px; } .control label, .eyebrow { color: var(--muted); font: 11px/1.2 Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+    .toggle { display: flex; align-items: center; gap: 7px; padding: 9px 0; } .toggle input { accent-color: var(--foe); }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(300px, .8fr); min-height: 700px; }
+    .graph-wrap { position: relative; min-height: 700px; background: radial-gradient(circle at 50% 45%, rgba(251,191,36,.08), transparent 45%), var(--bg); }
+    svg { width: 100%; height: 700px; display: block; }
+    .edge { stroke-width: 1.2; cursor: pointer; transition: opacity .18s, stroke-width .18s; } .edge:hover, .edge.selected { stroke-width: 5; }
+    .node { stroke: var(--bg); stroke-width: 1.5; cursor: pointer; } .node-label { fill: var(--text); font: 10px Arial, sans-serif; pointer-events: none; text-anchor: middle; }
+    .community-hull { fill: none; stroke-width: 1.5; stroke-dasharray: 4 6; opacity: .45; pointer-events: none; }
+    .legend { position: absolute; left: 16px; bottom: 14px; display: flex; flex-wrap: wrap; gap: 8px 12px; color: var(--muted); font: 12px Arial, sans-serif; }
+    .legend span { display: inline-flex; align-items: center; gap: 5px; } .swatch { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .inspector { padding: 22px 20px; background: var(--panel); border-left: 1px solid var(--border); overflow: auto; }
+    .inspector h1 { margin: 4px 0 5px; font: 700 25px/1.1 Georgia, serif; } .inspector h2 { margin: 22px 0 7px; font: 700 15px Arial, sans-serif; }
+    .muted { color: var(--muted); } .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; color: #111820; font: 700 11px Arial, sans-serif; text-transform: uppercase; letter-spacing: .06em; }
+    .evidence { margin: 10px 0; padding: 14px; border-left: 3px solid var(--accent); background: var(--card); } .evidence q { display: block; font-size: 16px; line-height: 1.35; }
+    .evidence mark { background: rgba(251,191,36,.35); color: inherit; padding: 1px 3px; } .source { color: var(--accent); font: 12px Arial, sans-serif; }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; } .stat { padding: 10px; background: var(--card); border: 1px solid var(--border); }
+    .stat strong { display: block; font: 700 17px Arial, sans-serif; } .summary { margin-top: 16px; width: 100%; border-collapse: collapse; font: 12px Arial, sans-serif; }
+    .summary th, .summary td { padding: 6px 4px; border-bottom: 1px solid var(--border); text-align: right; } .summary th:first-child, .summary td:first-child { text-align: left; }
+    .empty { max-width: 340px; margin: 0 auto; padding-top: 210px; text-align: center; color: var(--muted); }
+    @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } .graph-wrap { min-height: 560px; } svg { height: 560px; } .inspector { border-left: 0; border-top: 1px solid var(--border); } }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="control"><label for="source">Search source</label><input id="source" list="characters" placeholder="e.g. Wolverine"></div>
+    <div class="control"><label for="target">Search target</label><input id="target" list="characters" placeholder="e.g. Hulk"></div>
+    <datalist id="characters"></datalist>
+    <button id="inspect">Inspect pair</button>
+    <label class="toggle"><input id="enemy-filter" type="checkbox"> Show foe edges only</label>
+    <label class="toggle"><input id="cross-filter" type="checkbox"> Show between-community edges</label>
+  </div>
+  <main class="layout">
+    <section class="graph-wrap"><svg id="graph" viewBox="0 0 900 700" role="img" aria-label="Marvel giant component with Louvain communities"></svg><div class="legend"><span><i class="swatch" style="background:var(--foe)"></i>foe</span><span><i class="swatch" style="background:var(--ally)"></i>ally</span><span><i class="swatch" style="background:var(--family)"></i>family</span><span><i class="swatch" style="background:var(--unknown)"></i>unknown</span></div></section>
+    <aside class="inspector" id="inspector"></aside>
+  </main>
+<script>
+const COLORS = { family: 'var(--family)', foe: 'var(--foe)', ally: 'var(--ally)', unknown: 'var(--unknown)' };
+const COMMUNITY_COLORS = ['#fbbf24', '#38bdf8', '#34d399', '#c084fc', '#fb7185', '#f97316', '#a3e635', '#60a5fa'];
+let data;
+let selected;
+let simulation;
+let foeOnly = false;
+let betweenOnly = false;
+const svg = d3.select('#graph');
+const graphWidth = 900;
+const graphHeight = 700;
+
+function endpointId(endpoint) { return typeof endpoint === 'object' ? endpoint.id : endpoint; }
+function nodeLabel(id) { const node = data.nodes.find(item => item.id === endpointId(id)); return node ? node.label : endpointId(id); }
+function findEdge(source, target) { return data.edges.find(edge => (endpointId(edge.source) === source && endpointId(edge.target) === target) || (endpointId(edge.source) === target && endpointId(edge.target) === source)); }
+function sameEdge(first, second) { return first && second && ((endpointId(first.source) === endpointId(second.source) && endpointId(first.target) === endpointId(second.target)) || (endpointId(first.source) === endpointId(second.target) && endpointId(first.target) === endpointId(second.source))); }
+function selectedNodeIds() { return selected ? new Set([endpointId(selected.source), endpointId(selected.target)]) : new Set(); }
+function findNode(query) { const normalized = query.trim().toLowerCase(); const exact = data.nodes.find(node => node.label.toLowerCase() === normalized); if (exact) return exact; return data.nodes.filter(node => node.label.toLowerCase().includes(normalized)).sort((a, b) => a.label.length - b.label.length)[0]; }
+function edgeVisible(edge) { return (!foeOnly || edge.relation === 'foe') && (!betweenOnly || !edge.insideCommunity); }
+function relationRows() {
+  return ['family', 'foe', 'ally', 'unknown'].map(relation => `<tr><th>${relation}</th><td>${data.relationSummary.inside[relation]}</td><td>${data.relationSummary.between[relation]}</td></tr>`).join('');
+}
+function renderInspector(edge) {
+  if (!edge) {
+    document.getElementById('inspector').innerHTML = `<div class="eyebrow">Louvain giant component</div><h1>${data.stats.nodes} characters</h1><p class="muted">${data.stats.edges} undirected links, ${data.communities} communities. Search two character names or click a relationship to inspect its concordance.</p><div class="stats"><div class="stat"><span class="muted">directed evidence</span><strong>${data.stats.directedEdges}</strong></div><div class="stat"><span class="muted">largest community</span><strong>${data.stats.communitySizes[0]}</strong></div></div><h2>Relationships by community location</h2><table class="summary"><thead><tr><th>label</th><th>inside</th><th>between</th></tr></thead><tbody>${relationRows()}</tbody></table><p class="muted">Community IDs come from NetworkX Louvain modularity optimization with seed 42. “Between” means the two endpoints received different Louvain community IDs.</p>`;
+    return;
+  }
+  const highlighted = edge.trigger ? edge.excerpt.replace(new RegExp(`(${edge.trigger})`, 'ig'), '<mark>$1</mark>') : edge.excerpt;
+  document.getElementById('inspector').innerHTML = `<div class="eyebrow">Selected giant-component link</div><h1>${nodeLabel(edge.source)} <span class="muted">and</span> ${nodeLabel(edge.target)}</h1><p><span class="badge" style="background:${COLORS[edge.relation]}">${edge.relation}</span> <span class="muted">${edge.insideCommunity ? 'inside one community' : 'between communities'}${edge.trigger ? `; trigger: ${edge.trigger}` : ''}</span></p><h2>Concordance evidence</h2><div class="evidence"><q>${highlighted}</q><a class="source" href="${edge.sourceUrl}" target="_blank" rel="noreferrer">Open source page</a></div><div class="stats"><div class="stat"><span class="muted">directions observed</span><strong>${edge.directions}</strong></div><div class="stat"><span class="muted">community relation</span><strong>${edge.insideCommunity ? 'inside' : 'between'}</strong></div></div><p class="muted">The line is a Week 1 hyperlink relationship. The color is assigned from the first matching keyword in the archived source-page sentence; unknown means no configured keyword matched.</p>`;
+}
+function renderGraph() {
+  svg.selectAll('*').remove();
+  const nodes = data.nodes.map(node => ({ ...node }));
+  const visibleEdges = data.edges.filter(edgeVisible).map(edge => ({ ...edge, source: endpointId(edge.source), target: endpointId(edge.target) }));
+  const communities = [...new Set(nodes.map(node => node.community))].sort((a, b) => a - b);
+  const communityCenters = new Map(communities.map((community, index) => {
+    const columns = Math.ceil(Math.sqrt(communities.length));
+    const rows = Math.ceil(communities.length / columns);
+    return [community, { x: graphWidth * (index % columns + 0.5) / columns, y: graphHeight * (Math.floor(index / columns) + 0.5) / rows }];
+  }));
+  const focus = selectedNodeIds();
+  const edgeLayer = svg.append('g');
+  const edgeSelection = edgeLayer.selectAll('line').data(visibleEdges).join('line').attr('class', edge => `edge ${sameEdge(selected, edge) ? 'selected' : ''}`).attr('stroke', edge => COLORS[edge.relation]).attr('stroke-width', edge => sameEdge(selected, edge) ? 8 : 1.2).attr('opacity', edge => sameEdge(selected, edge) ? 1 : (selected ? .06 : .55)).on('click', (_, edge) => { selected = findEdge(endpointId(edge.source), endpointId(edge.target)) || edge; renderGraph(); renderInspector(selected); });
+  const nodeLayer = svg.append('g').selectAll('g').data(nodes).join('g');
+  nodeLayer.attr('opacity', node => selected ? (focus.has(node.id) ? 1 : .12) : 1);
+  nodeLayer.append('circle').attr('class', 'node').attr('r', node => focus.has(node.id) ? Math.max(6, Math.min(12, 4 + Math.log1p(node.degree || 1))) : Math.max(2.8, Math.min(8, 2.8 + Math.log1p(node.degree || 1)))).attr('fill', node => COMMUNITY_COLORS[node.community % COMMUNITY_COLORS.length]).attr('stroke-width', node => focus.has(node.id) ? 4 : 1.5).on('click', (_, node) => { const related = data.edges.find(edge => endpointId(edge.source) === node.id || endpointId(edge.target) === node.id); if (related) { selected = related; renderGraph(); renderInspector(related); } });
+  nodeLayer.append('title').text(node => `${node.label} | community ${node.community}`);
+  nodeLayer.filter(node => (node.degree || 0) > 25).append('text').attr('class', 'node-label').attr('dy', -10).text(node => node.label);
+  simulation = d3.forceSimulation(nodes).force('link', d3.forceLink(visibleEdges).id(node => node.id).distance(28).strength(.16)).force('charge', d3.forceManyBody().strength(-18)).force('center', d3.forceCenter(graphWidth / 2, graphHeight / 2)).force('communityX', d3.forceX(node => communityCenters.get(node.community).x).strength(.22)).force('communityY', d3.forceY(node => communityCenters.get(node.community).y).strength(.22)).force('collision', d3.forceCollide().radius(node => Math.max(4, Math.min(12, 3 + Math.log1p(node.degree || 1)))));
+  simulation.on('tick', () => { edgeSelection.attr('x1', edge => edge.source.x).attr('y1', edge => edge.source.y).attr('x2', edge => edge.target.x).attr('y2', edge => edge.target.y); nodeLayer.attr('transform', node => `translate(${node.x},${node.y})`); });
+}
+function populateCharacters() { document.getElementById('characters').innerHTML = data.nodes.map(node => `<option value="${node.label}"></option>`).join(''); }
+document.getElementById('inspect').onclick = () => { const source = findNode(document.getElementById('source').value); const target = findNode(document.getElementById('target').value); selected = source && target ? findEdge(source.id, target.id) : null; renderGraph(); renderInspector(selected); };
+document.getElementById('enemy-filter').onchange = event => { foeOnly = event.target.checked; renderGraph(); };
+document.getElementById('cross-filter').onchange = event => { betweenOnly = event.target.checked; renderGraph(); };
+fetch('../marvel_relationships_giant.json').then(response => response.json()).then(loaded => { data = loaded; data.nodes.forEach(node => { node.degree = data.edges.filter(edge => edge.source === node.id || edge.target === node.id).length; }); populateCharacters(); selected = findEdge('Wolverine_(character)', 'Hulk'); renderGraph(); renderInspector(null); });
+</script>
+</body>
+</html>
