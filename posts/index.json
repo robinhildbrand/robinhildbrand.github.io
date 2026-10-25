@@ -1,9 +1,31 @@
 [
   {
+    "slug": "marvel-cooccurrence-vs-hyperlinks",
+    "title": "Citations vs. Co-occurrences: The Marvel Canon Gap",
+    "date": "2026-10-15",
+    "author": "Robin, Giosué, Sébastien",
+    "readTime": "7 min read",
+    "tags": [
+      "marvel",
+      "co-occurrence",
+      "nlp",
+      "text-mining",
+      "network-analysis",
+      "complex-networks"
+    ],
+    "summary": "We extract character co-occurrences across 303 Marvel Wikipedia articles, compare the narrative network to the hyperlink citation graph, uncover the 'Canon Gap', and turn the structural divergence into an interactive detective game.",
+    "wikilinks": [
+      "exploring-degrees-marvel-dataset",
+      "spot-the-intruder",
+      "typing-marvel-relationships-with-concordances"
+    ],
+    "file": "posts/marvel-cooccurrence-vs-hyperlinks.md"
+  },
+  {
     "slug": "typing-marvel-relationships-with-concordances",
     "title": "Typing Marvel Relationships with Wikipedia Concordances",
     "date": "2026-09-30",
-    "author": "Robin Hildbrand",
+    "author": "Robin, Giosué, Sébastien",
     "readTime": "6 min read",
     "tags": [
       "marvel",
@@ -14,7 +36,8 @@
     "summary": "The Marvel giant component becomes a typed graph when Wikipedia concordances supply evidence for family, foe, and ally labels inside and between Louvain communities.",
     "wikilinks": [
       "clique-percolation-k3",
-      "exploring-degrees-marvel-dataset"
+      "exploring-degrees-marvel-dataset",
+      "marvel-cooccurrence-vs-hyperlinks"
     ],
     "file": "posts/typing-marvel-relationships-with-concordances.md"
   },

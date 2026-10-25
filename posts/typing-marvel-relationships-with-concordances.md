@@ -5,7 +5,7 @@ author: "Robin, Giosué, Sébastien"
 readTime: "6 min read"
 tags: ["marvel", "community-detection", "text-mining", "network-analysis"]
 summary: "The Marvel giant component becomes a typed graph when Wikipedia concordances supply evidence for family, foe, and ally labels inside and between Louvain communities."
-wikilinks: ["exploring-degrees-marvel-dataset", "clique-percolation-k3"]
+wikilinks: ["exploring-degrees-marvel-dataset", "clique-percolation-k3", "marvel-cooccurrence-vs-hyperlinks"]
 layout: full
 ---
 
